@@ -1,0 +1,13 @@
+# Ignore generated files
+*.pyc
+__pycache__/
+
+# Ignore build artifacts
+build/
+dist/
+*.egg-info/
+
+# Ignore configuration files
+.env
+.venv/
+venv/
