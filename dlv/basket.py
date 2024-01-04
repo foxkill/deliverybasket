@@ -5,6 +5,8 @@ import datetime
 from typing import Dict, Union
 from rateslib import FixedRateBond, dt
 import requests
+import yaml
+import magic
 
 from . import Treasury
 
@@ -16,13 +18,36 @@ TreasuryDict = Dict[str, Union[Treasury, None]]
 __search_url__ = 'https://www.treasurydirect.gov/TA_WS/securities/search'
 
 class Basket():
-    def __init__(self):
-        self.cusips: TreasuryDict = {}
+    def __init__(self, treasuries: TreasuryDict = {}):
+        self.cusips: TreasuryDict = treasuries
 
-    # def add(self, cusip: str) -> None:
-    #     self.cusips.append(cusip)
+    def build_from_yaml(self, treasuryYaml: dict):
+        for cusip in treasuryYaml:
+            item = treasuryYaml[cusip]
+            issueDate = item['effective']
+            maturityDate = item['termination']
+            
+            eff = dt(issueDate.year, issueDate.month, issueDate.day)
+            mat = dt(maturityDate.year, maturityDate.month, maturityDate.day)
 
-    def build(self) -> TreasuryDict:
+            frb = FixedRateBond(
+                effective=eff,
+                termination=mat,
+                fixed_rate=item['fixed_rate'],
+                spec='ust'
+            )
+
+            treasury = Treasury(
+                treasury=frb, 
+                effective=eff, 
+                termination=mat,
+                price=item['price'],
+                fixed_rate=item['fixed_rate']
+            )
+
+            self.cusips[cusip] = treasury
+
+    def build_from_text(self) -> TreasuryDict:
         if len(self.cusips) == 0:
             return {}
         
@@ -54,20 +79,71 @@ class Basket():
                 spec='ust'
             )
 
-            treasury = Treasury(frb, 0)
+            treasury = Treasury(
+                treasury=frb, 
+                effective=eff, 
+                termination=mat,
+                price=0,
+                fixed_rate=rate
+            )
 
             self.cusips[cusip] = treasury
 
         return self.cusips
 
-    def from_file(self, filename: str) -> TreasuryDict:
-        text = ''
+    def get(self, key: str) -> Union[Treasury, None]:
+        return self.cusips.get(key)
+
+    @staticmethod
+    def from_file(filename: str):
+        type = 'text/yaml'
+        if type == 'text/plain':
+            basket = Basket()
+            cusips = basket.read_from_text(filename)
+            basket.set_cusips(cusips)
+            basket.build_from_text()
+            return basket
+        
+        if type == 'text/yaml':
+            basket = Basket()
+            yml = basket.read_from_yaml(filename)
+            basket.build_from_yaml(yml)
+            return basket
+
+        return None
+    
+    @staticmethod
+    def read_from_text(filename):
         with open(filename, 'r') as f:
             text = f.read()
-        
-        self.cusips = dict.fromkeys(text.splitlines())
+            return dict.fromkeys(text.splitlines())
 
-        return self.build()
+    @staticmethod
+    def read_from_yaml(filename):
+        with open(filename, 'r') as file:
+            return yaml.safe_load(file)
 
     def get_url(self, cusip) -> str:
         return __search_url__ + f'?cusip={cusip}&format=json' 
+    
+    def set_cusips(self, cusips: TreasuryDict):
+        self.cusips = cusips
+    
+    def serialze(self, filename) -> bool:
+        strYaml = ''
+        for cusip in self.cusips:
+            treasury = self.cusips.get(cusip)
+            if treasury is None:
+                continue
+
+            strYaml += (treasury.to_yaml(cusip) + '\n\n')
+
+        if len(strYaml) == 0:
+            return False
+
+        with open(filename, 'w+') as f:
+            f.write(strYaml)
+
+        return True
+
+

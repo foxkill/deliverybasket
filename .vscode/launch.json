@@ -11,7 +11,24 @@
             "program": "main.py",
             "console": "integratedTerminal",
             "justMyCode": false,
-            "args": ["dlv", "--fromfile=tests/basket.txt"]
+            "args": ["dlv", "--fromfile=tests/basket.txt", "--first=2010-09-09"]
+        },
+        {
+            "name": "dlv [yaml]",
+            "type": "python",
+            "request": "launch",
+            "program": "main.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "args": ["dlv", "--fromfile=tests/ulh4.basket.yaml"]
+        },
+        {
+            "name": "current file",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": false,
         }
     ]
 }

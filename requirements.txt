@@ -1,3 +1,5 @@
 rateslib
 typer
 requests
+pyyaml
+python-magic

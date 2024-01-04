@@ -3,7 +3,7 @@
 #
 from rateslib import BondFuture, FixedRateBond, dt
 
-def create_and_print_basket():
+def main():
     # cusip: 9128286Y1 - 3yr note
     ust9128286Y1 = FixedRateBond(
         effective=dt(2019,6,15),
@@ -100,3 +100,6 @@ def create_and_print_basket():
     df['Gross Basis'] *= 32
     df['Net Basis'] *= 32
     print(df)
+
+if __name__ == "__main__":
+    main()
