@@ -2,6 +2,7 @@
 # Basket
 #
 import datetime
+import os
 from typing import Dict, Union
 from rateslib import FixedRateBond, dt
 import requests
@@ -96,15 +97,21 @@ class Basket():
 
     @staticmethod
     def from_file(filename: str):
-        type = 'text/yaml'
-        if type == 'text/plain':
+        head, tail = os.path.splitext(filename)
+
+        tail = tail.lower()
+
+        isTextFile = tail in ['', '.txt']
+        isYamlFile = tail in ['.yml', '.yaml']
+
+        if isTextFile:
             basket = Basket()
             cusips = basket.read_from_text(filename)
             basket.set_cusips(cusips)
             basket.build_from_text()
             return basket
         
-        if type == 'text/yaml':
+        if isYamlFile:
             basket = Basket()
             yml = basket.read_from_yaml(filename)
             basket.build_from_yaml(yml)
@@ -121,7 +128,7 @@ class Basket():
     @staticmethod
     def read_from_yaml(filename):
         with open(filename, 'r') as file:
-            return yaml.safe_load(file)
+            return yaml.load(file, Loader=yaml.SafeLoader)
 
     def get_url(self, cusip) -> str:
         return __search_url__ + f'?cusip={cusip}&format=json' 
@@ -129,7 +136,12 @@ class Basket():
     def set_cusips(self, cusips: TreasuryDict):
         self.cusips = cusips
     
-    def serialze(self, filename) -> bool:
+    def serialize(self, filename) -> bool:
+        head, tail = os.path.splitext(filename)
+
+        if not tail.lower() in ['.yml', '.yaml']:
+            filename = head + tail + '.yaml'
+           
         strYaml = ''
         for cusip in self.cusips:
             treasury = self.cusips.get(cusip)

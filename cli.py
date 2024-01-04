@@ -17,16 +17,19 @@ app = typer.Typer(help=__app_name__)
 @app.command()
 def dlv(
     fromFile: Annotated[str, typer.Option(help='The file to read the cusip''s of the treasuries from')],
-    serialzeTo: Annotated[Optional[str], typer.Option(help='Write gathered informations about treasuries to basket file')], 
+    toFile: Annotated[Optional[str], typer.Option(help='Write gathered informations about treasuries to basket file')] = None, 
     future: Annotated[Optional[str], typer.Option(help='The file to read the cusip''s of the treasuries from')] = '',
     coupon: Annotated[Optional[float], typer.Option(help='The notianal coupon of the future')] = 6.0,
     first: Annotated[Optional[str], typer.Option(help='The notianal coupon of the future')] = '',
     last: Annotated[Optional[str], typer.Option(help='The notianal coupon of the future')] = '',
 ):
-    print(fromFile, future, coupon, first, last)
+    print(fromFile, toFile, future, coupon, first, last)
 
     basket = Basket().from_file(fromFile)
     if not basket is None:
+        if toFile:
+            basket.serialize(toFile)
+
         item = basket.get('912810TV0')
         print(item)
 

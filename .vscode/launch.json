@@ -23,6 +23,15 @@
             "args": ["dlv", "--fromfile=tests/ulh4.basket.yaml"]
         },
         {
+            "name": "dlv [read and write basket]",
+            "type": "python",
+            "request": "launch",
+            "program": "main.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "args": ["dlv", "--fromfile=tests/ulh4.basket.txt", "--tofile=tests/ulh4.basket"]
+        }
+        {
             "name": "current file",
             "type": "python",
             "request": "launch",
