@@ -1,5 +1,5 @@
 #
-# dlv
+# dlv:treasury
 #
 from rateslib import FixedRateBond, dt
 
@@ -14,7 +14,7 @@ class Treasury():
         self.termination = termination
         self.fixed_rate = fixed_rate
         self.effective = effective
-        self.tresury = treasury
+        self.treasury = treasury
         self.price = price
     
     def get_price(self) -> float:
@@ -27,7 +27,7 @@ class Treasury():
         return self.effective
     
     def get_treasury(self) -> FixedRateBond:
-        return self.tresury
+        return self.treasury
 
     def get_fixed_rate(self) -> float:
         return self.fixed_rate
@@ -38,4 +38,4 @@ class Treasury():
         termination =  self.get_termination().strftime('%Y-%m-%dT%H:%M:%S')
         fixed_rate = self.get_fixed_rate()
 
-        return f'{cusip}:\n\teffective: {effective}\n\ttermination: {termination}\n\tprice: {price}\n\tfixed_rate: {fixed_rate}'
+        return f'{cusip}:\n  effective: {effective}\n  termination: {termination}\n  price: {price}\n  fixed_rate: {fixed_rate}'
