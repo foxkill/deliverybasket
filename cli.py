@@ -16,8 +16,23 @@ app = typer.Typer(help=__app_name__)
 
 @app.command()
 def dlv(
-    fromFile: Annotated[str, typer.Option(help='The file to read the cusip''s of the treasuries from')],
-    toFile: Annotated[Optional[str], typer.Option(help='Write gathered informations about treasuries to basket file')] = None, 
+    fromFile: Annotated[
+        str, 
+        typer.Option(
+            '--from-file',
+            '-f',
+            help='The file to read the cusip''s of the treasuries from')
+        ],
+    printdlv: Annotated[Optional[bool], typer.Option(
+        '--print',
+        '-p',
+        help='Print the basket like bloombergs dlv function', 
+    )] = False,
+    toFile: Annotated[Optional[str], typer.Option(
+        '--serialize',
+        '-s',
+        help='Write gathered informations about treasuries to basket file')
+    ] = None, 
     future: Annotated[Optional[str], typer.Option(help='The file to read the cusip''s of the treasuries from')] = '',
     coupon: Annotated[Optional[float], typer.Option(help='The notianal coupon of the future')] = 6.0,
     first: Annotated[Optional[str], typer.Option(help='The notianal coupon of the future')] = '',
@@ -26,12 +41,15 @@ def dlv(
     print(fromFile, toFile, future, coupon, first, last)
 
     basket = Basket().from_file(fromFile)
-    if not basket is None:
-        if toFile:
-            basket.serialize(toFile)
+    if basket is None:
+        typer.echo('Could not create basket.')
+        typer.Exit(1)
 
-        item = basket.get('912810TV0')
-        print(item)
+    if toFile and basket:
+        basket.serialize(toFile) # ignore
+
+    if printdlv and basket:
+        basket.print()
 
     # if basket.serialze('tests/ulh4.basket.yaml') == True:
         # print('Basket successfully serialized')
