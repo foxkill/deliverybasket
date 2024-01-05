@@ -4,7 +4,7 @@
 import datetime
 import os
 from typing import Dict, Union
-from rateslib import FixedRateBond, dt
+from rateslib import BondFuture, FixedRateBond, dt
 import requests
 import yaml
 import magic
@@ -123,7 +123,8 @@ class Basket():
     def read_from_text(filename):
         with open(filename, 'r') as f:
             text = f.read()
-            return dict.fromkeys(text.splitlines())
+            lines = [t.strip() for t in text.splitlines()]
+            return dict.fromkeys(lines)
 
     @staticmethod
     def read_from_yaml(filename):
@@ -136,6 +137,29 @@ class Basket():
     def set_cusips(self, cusips: TreasuryDict):
         self.cusips = cusips
     
+    def print(self):
+        if len(self.cusips) == 0:
+            raise ValueError('No available tresuries in basket')
+
+        usbf = BondFuture(
+            coupon=6.0,
+            delivery=(dt(2024, 1, 3), dt(2024,3,28)),
+            basket=[t.get_treasury() for t in self.cusips.values()], # type: ignore
+            calc_mode='ust_short',
+        )
+
+        df = usbf.dlv(
+            future_price=130 + (7/32),
+            prices=[t.price if not t is None else 0 for t in self.cusips.values()],
+            repo_rate=5.32,
+            settlement=dt(2024,1,5),
+            delivery=dt(2024,3,28),
+            convention='Act360',
+        )
+
+        # usbf.basket
+        print(df)
+
     def serialize(self, filename) -> bool:
         head, tail = os.path.splitext(filename)
 
@@ -157,5 +181,3 @@ class Basket():
             f.write(strYaml)
 
         return True
-
-
