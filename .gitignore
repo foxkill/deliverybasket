@@ -11,4 +11,5 @@ dist/
 .env
 .venv/
 venv/
-tests/ulh4.basket.yaml
+tests/*.yaml
+tests/*.txt
