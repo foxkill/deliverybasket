@@ -11,7 +11,7 @@
             "program": "main.py",
             "console": "integratedTerminal",
             "justMyCode": false,
-            "args": ["dlv", "--fromfile=tests/basket.txt", "--first=2010-09-09"]
+            "args": ["dlv", "--from-file=tests/basket.txt", "--first=2010-09-09"]
         },
         {
             "name": "dlv [yaml]",
@@ -20,7 +20,7 @@
             "program": "main.py",
             "console": "integratedTerminal",
             "justMyCode": false,
-            "args": ["dlv", "--fromfile=tests/ulh4.basket.yaml"]
+            "args": ["dlv", "--from-file=tests/ulh4.basket.yaml"]
         },
         {
             "name": "dlv [read and write basket]",
@@ -29,8 +29,17 @@
             "program": "main.py",
             "console": "integratedTerminal",
             "justMyCode": false,
-            "args": ["dlv", "--fromfile=tests/ulh4.basket.txt", "--tofile=tests/ulh4.basket"]
-        }
+            "args": ["dlv", "--fromfile=tests/ulh4.ctd.basket.txt", "--tofile=tests/ulh4.ctd.basket"]
+        },
+        {
+            "name": "dlv [print basket]",
+            "type": "python",
+            "request": "launch",
+            "program": "main.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "args": ["dlv", "--fromfile=tests/ulh4.ctd.basket.yaml", "--print"]
+        },
         {
             "name": "current file",
             "type": "python",
