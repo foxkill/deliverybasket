@@ -9,6 +9,8 @@ import requests
 import yaml
 import magic
 
+from dlv.future import Future
+
 from . import Treasury
 
 # type TreasuryDict = Dict[str, Treasury | None]
@@ -137,7 +139,9 @@ class Basket():
     def set_cusips(self, cusips: TreasuryDict):
         self.cusips = cusips
     
-    def print(self):
+    def print(self, ft: Future):
+        print(ft)
+
         if len(self.cusips) == 0:
             raise ValueError('No available tresuries in basket')
 

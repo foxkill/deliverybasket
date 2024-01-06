@@ -2,6 +2,7 @@
 # dlv:future
 #
 import re
+from rateslib import get_calendar
 
 from .enums import FutureMonths, TreasuryFutures
 
@@ -45,6 +46,14 @@ class Future:
 
     def get_tenor(self) -> int:
         return self._tenor
+
+    def get_deliveries(self):
+        cal =  get_calendar('nyc')
+        holidays = cal.
+
+    def __hash__(self):
+        strRepr = str(self)
+        return hash(strRepr)
 
     def __str__(self) -> str:
         return self._code + FutureMonths(self._month).name + str(self._year)

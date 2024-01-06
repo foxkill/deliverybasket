@@ -21,6 +21,11 @@ def test_get_month_code():
     f = Future.parse('TNH4')
     assert f.get_month_code() == 'H'
 
+def test_hash_code():
+    f1  = Future.parse('TNH4')
+    f2  = Future.parse('TNH4')
+    assert hash(f1) == hash(f2)
+
 def test_get_tenor():
     ty = Future.parse('TYH4')
     tn = Future.parse('TNH4')

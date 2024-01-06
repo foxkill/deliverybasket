@@ -1,11 +1,11 @@
 #
 # dlv:cli
 #
+import typer
 import datetime
 from typing import Annotated, Optional
 from rateslib import BondFuture, dt
-import typer
-from dlv import __app_name__, __version__, Basket
+from dlv import __app_name__, __version__, Basket, Future
 
 def version(value: bool) -> None:
     if value:
@@ -23,6 +23,13 @@ def dlv(
             '-f',
             help='The file to read the cusip''s of the treasuries from')
         ],
+    future: Annotated[
+        str, 
+        typer.Option(
+            '--future',
+            '-t',
+            help='Name of the future the basket is deliverable to. Examples are: TUU2, FVH4 etc.')
+        ],
     printdlv: Annotated[Optional[bool], typer.Option(
         '--print',
         '-p',
@@ -33,7 +40,6 @@ def dlv(
         '-s',
         help='Write gathered informations about treasuries to basket file')
     ] = None, 
-    future: Annotated[Optional[str], typer.Option(help='The file to read the cusip''s of the treasuries from')] = '',
     coupon: Annotated[Optional[float], typer.Option(help='The notianal coupon of the future')] = 6.0,
     first: Annotated[Optional[str], typer.Option(help='The notianal coupon of the future')] = '',
     last: Annotated[Optional[str], typer.Option(help='The notianal coupon of the future')] = '',
@@ -49,7 +55,8 @@ def dlv(
         basket.serialize(toFile) # ignore
 
     if printdlv and basket:
-        basket.print()
+        f = Future.parse(future)
+        basket.print(f)
 
     # if basket.serialze('tests/ulh4.basket.yaml') == True:
         # print('Basket successfully serialized')
