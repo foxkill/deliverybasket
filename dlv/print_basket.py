@@ -96,7 +96,7 @@ def main():
         delivery=dt(2020,10,5),
         convention='Act360',
     )
-
+    
     df['Gross Basis'] *= 32
     df['Net Basis'] *= 32
     print(df)
