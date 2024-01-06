@@ -141,22 +141,30 @@ class Basket():
         if len(self.cusips) == 0:
             raise ValueError('No available tresuries in basket')
 
-        usbf = BondFuture(
+        basket = [t.get_treasury() for t in self.cusips.values()] # type: ignore
+        future = BondFuture(
             coupon=6.0,
-            delivery=(dt(2024, 1, 3), dt(2024,3,28)),
-            basket=[t.get_treasury() for t in self.cusips.values()], # type: ignore
-            calc_mode='ust_short',
+            delivery=(dt(2024, 3, 1), dt(2024, 3, 28)),
+            basket=basket, # type: ignore
+            nominal=100e3,
+            calendar="nyc",
+            currency="usd",
+            # calc_mode='ust_short',
+            calc_mode='ust_long'
         )
 
-        df = usbf.dlv(
-            future_price=130 + (7/32),
-            prices=[t.price if not t is None else 0 for t in self.cusips.values()],
+        prices = [t.price if not t is None else 0 for t in self.cusips.values()]
+        df = future.dlv(
+            future_price=130 + (27/32),
+            prices=prices,
             repo_rate=5.32,
             settlement=dt(2024,1,5),
-            delivery=dt(2024,3,28),
+            # delivery=dt(2024,3,28),
             convention='Act360',
         )
 
+        # 0.5980
+        # 0.8281
         # usbf.basket
         print(df)
 
