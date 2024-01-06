@@ -29,7 +29,7 @@
             "program": "main.py",
             "console": "integratedTerminal",
             "justMyCode": false,
-            "args": ["dlv", "--fromfile=tests/ulh4.ctd.basket.txt", "--tofile=tests/ulh4.ctd.basket"]
+            "args": ["dlv", "--from-file=tests/ulh4.ctd.basket.txt", "--tofile=tests/ulh4.ctd.basket"]
         },
         {
             "name": "dlv [print basket]",
@@ -38,7 +38,7 @@
             "program": "main.py",
             "console": "integratedTerminal",
             "justMyCode": false,
-            "args": ["dlv", "--fromfile=tests/ulh4.ctd.basket.yaml", "--print"]
+            "args": ["dlv", "--from-file=tests/ulh4.ctd.basket.yaml", "--print"]
         },
         {
             "name": "current file",
