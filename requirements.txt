@@ -3,3 +3,4 @@ typer
 requests
 pyyaml
 python-magic
+pytest
