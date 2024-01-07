@@ -1,6 +1,7 @@
 # Ignore generated files
 *.pyc
 __pycache__/
+.coverage
 
 # Ignore build artifacts
 build/
