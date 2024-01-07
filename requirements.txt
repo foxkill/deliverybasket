@@ -5,3 +5,4 @@ pyyaml
 python-magic
 pytest
 pytest-cov
+pytest-mock

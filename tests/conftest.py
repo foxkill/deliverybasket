@@ -3,6 +3,8 @@
 #
 import pytest
 
+from dlv.future import Future
+
 @pytest.fixture(autouse=True, name="generate_cusips")
 def generate_cusips():
     return [
@@ -16,3 +18,6 @@ def generate_cusips():
         '9128282W9',
     ]
 
+@pytest.fixture(autouse=True)
+def create_future() -> Future:
+    return Future.parse('ulh4')

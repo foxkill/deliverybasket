@@ -2,17 +2,17 @@
 # dlv:tests:cache
 #
 
+from io import StringIO
+import pytest
 from dlv.basket import Basket
 from dlv.cache import Cache
-from dlv.future import Future
-
 from .basket_fixture import create_basket
-from .future_fixture import create_future
 
-def test_cache_basket(create_future: Future, create_basket: Basket):
-    future = create_future
+def test_cache_basket(create_basket: Basket, mocker):
     basket = create_basket
-    c = Cache(future=future, basket=basket)
-    assert c.put()
+    c = Cache(basket=basket)
+    mo =  mocker.patch("builtins.open")
+    r =  c.put()
+    assert r
 
     # c.cache_basket(basket)
