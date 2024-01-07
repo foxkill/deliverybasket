@@ -8,10 +8,9 @@ from rateslib import BondFuture, FixedRateBond, dt
 import requests
 import yaml
 import magic
-
-from dlv.future import Future
-
-from . import Treasury
+from hashlib import md5
+from .future import Future
+from .treasury import Treasury
 
 # type TreasuryDict = Dict[str, Treasury | None]
 
@@ -97,6 +96,10 @@ class Basket():
     def get(self, key: str) -> Union[Treasury, None]:
         return self.cusips.get(key)
 
+    def hashcode(self) -> str:
+        keys = '|'.join(self.cusips.keys())
+        return md5(keys.encode()).hexdigest()
+
     @staticmethod
     def from_file(filename: str):
         head, tail = os.path.splitext(filename)
@@ -172,7 +175,7 @@ class Basket():
         # usbf.basket
         print(df)
 
-    def serialize(self, filename) -> bool:
+    def serialize(self, filename: str, future: Union[Future, None] = None) -> bool:
         head, tail = os.path.splitext(filename)
 
         if not tail.lower() in ['.yml', '.yaml']:
@@ -188,6 +191,9 @@ class Basket():
 
         if len(strYaml) == 0:
             return False
+
+        if not future is None:
+            strYaml = f'future: {future.long_code}\n\n' + strYaml
 
         with open(filename, 'w+') as f:
             f.write(strYaml)
