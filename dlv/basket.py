@@ -20,8 +20,9 @@ TreasuryDict = Dict[str, Union[Treasury, None]]
 __search_url__ = 'https://www.treasurydirect.gov/TA_WS/securities/search'
 
 class Basket():
-    def __init__(self, treasuries: TreasuryDict = {}):
+    def __init__(self, future: Future, treasuries: TreasuryDict = {}):
         self.cusips: TreasuryDict = treasuries
+        self.future = future
 
     def build_from_yaml(self, treasuryYaml: dict):
         for cusip in treasuryYaml:
@@ -95,6 +96,9 @@ class Basket():
 
     def get(self, key: str) -> Union[Treasury, None]:
         return self.cusips.get(key)
+
+    def get_future(self) -> Future:
+        return self.future
 
     def hashcode(self) -> str:
         keys = '|'.join(self.cusips.keys())
@@ -175,12 +179,11 @@ class Basket():
         # usbf.basket
         print(df)
 
-    def serialize(self, filename: str, future: Union[Future, None] = None) -> bool:
-        head, tail = os.path.splitext(filename)
+    @classmethod
+    def unserialize(cls, filename): 
+        return cls.from_file(filename)
 
-        if not tail.lower() in ['.yml', '.yaml']:
-            filename = head + tail + '.yaml'
-           
+    def serialize(self) -> str:
         strYaml = ''
         for cusip in self.cusips:
             treasury = self.cusips.get(cusip)
@@ -189,13 +192,8 @@ class Basket():
 
             strYaml += (treasury.to_yaml(cusip) + '\n\n')
 
-        if len(strYaml) == 0:
-            return False
+        if not self.future is None:
+            strYaml = f'future: {self.future.long_code}\n\n' + strYaml
 
-        if not future is None:
-            strYaml = f'future: {future.long_code}\n\n' + strYaml
 
-        with open(filename, 'w+') as f:
-            f.write(strYaml)
-
-        return True
+        return strYaml
