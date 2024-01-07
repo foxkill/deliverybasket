@@ -1,65 +1,53 @@
 #
 # dlv:future
 #
+from dataclasses import dataclass
 import re
 from rateslib import get_calendar
-
+from typing import Final
 from .enums import FutureMonths, TreasuryFutures
 
+NOTIONAL_COUPON: Final = 6.0
+
 __invalid_future_message__ = 'Not a valid future code given. Must be one of TU, FV, Z3N, TY, TN, TWE, US, UL'
-__invalid_contract_month__ = 'Invalid contract month given. Only H,M,U and Z are valid.'
+__invalid_contract_month__ = 'Invalid contract month given. Only H, M, U and Z are valid.'
 
+@dataclass(frozen=True)
 class Future:
-    def __init__(self):
-        self._month = 0
-        self._year = 0
-        self._tenor = 0
-        self._code = ''
+    code: str
+    tenor: int
+    month: int
+    year: int
+
+    @property
+    def short_code(self) -> str:
+        return self.code + FutureMonths(self.month).name + str(self.year)[-1]
         
-    def month(self) -> int:
-        return self._month
+    @property
+    def median_code(self) -> str:
+        return self.code + FutureMonths(self.month).name + str(self.year)[-2]
 
-    def year(self):
-        return self._year
+    @property
+    def long_code(self) -> str:
+        return self.code + FutureMonths(self.month).name + str(self.year)
 
-    def set_year(self, value: int):
-        self._year = value
-        return self
-    
-    def set_month(self, value: int):
-        self._month = value
-        return self
-    
-    def set_code(self, value: str):
-        self._code = value.upper()
-        return self
-    
-    def set_tenor(self, value: int):
-        self._tenor = value
-        return self
-    
-    def short_name(self) -> str:
-        return self._code + FutureMonths(self._month).name + str(self._year)[-1]
-        
-    def get_month_code(self) -> str:
-        return FutureMonths(self._month).name
-
-    def get_tenor(self) -> int:
-        return self._tenor
+    @property
+    def month_code(self) -> str:
+        return FutureMonths(self.month).name
 
     def get_deliveries(self):
         cal =  get_calendar('nyc')
-        holidays = cal.
+        # holidays = cal.
 
     def __hash__(self):
         strRepr = str(self)
         return hash(strRepr)
 
     def __str__(self) -> str:
-        return self._code + FutureMonths(self._month).name + str(self._year)
+        return self.code + FutureMonths(self.month).name + str(self.year)
 
-    @staticmethod
-    def parse(name: str):
+    @classmethod
+    def parse(cls, name: str):
         m = re.match('(\\w{2})(\\w{1})(\\d{1,4})$', name)
 
         if m is None:
@@ -94,7 +82,4 @@ class Future:
         else:
             futureYear = 0
             
-        future = Future()
-        future.set_code(tenor.name).set_tenor(tenor.value).set_year(futureYear).set_month(month.value)
-
-        return future
+        return cls(tenor.name, tenor.value, month.value, futureYear)
