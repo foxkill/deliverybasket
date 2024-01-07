@@ -2,15 +2,14 @@
 # dlv:cli
 #
 import typer
-import datetime
 from typing import Annotated, Optional
-from rateslib import BondFuture, dt
 from dlv import __app_name__, __version__, Basket, Future
+from dlv.future import NOTIONAL_COUPON
 
 def version(value: bool) -> None:
     if value:
         typer.echo(__app_name__ + ' v' + __version__)
-        raise typer.Exit()
+        raise typer.Exit(0)
 
 app = typer.Typer(help=__app_name__)
 
@@ -40,7 +39,7 @@ def dlv(
         '-s',
         help='Write gathered informations about treasuries to basket file')
     ] = None, 
-    coupon: Annotated[Optional[float], typer.Option(help='The notianal coupon of the future')] = 6.0,
+    coupon: Annotated[Optional[float], typer.Option(help='The notianal coupon of the future')] = NOTIONAL_COUPON,
     first: Annotated[Optional[str], typer.Option(help='The notianal coupon of the future')] = '',
     last: Annotated[Optional[str], typer.Option(help='The notianal coupon of the future')] = '',
 ):
