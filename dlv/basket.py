@@ -9,6 +9,7 @@ import requests
 import yaml
 import magic
 from hashlib import md5
+from stdnum import cusip as cu
 from .future import Future
 from .treasury import Treasury
 
@@ -22,35 +23,52 @@ __search_url__ = 'https://www.treasurydirect.gov/TA_WS/securities/search'
 class Basket():
     def __init__(self, future: Future, treasuries: TreasuryDict = {}):
         self.cusips: TreasuryDict = treasuries
+        self._has_basket = False
         self.future = future
 
+    def has_basket(self) -> bool:
+        return self._has_basket
+
     def build_from_yaml(self, treasuryYaml: dict):
-        for cusip in treasuryYaml:
-            item = treasuryYaml[cusip]
-            issueDate = item['effective']
-            maturityDate = item['termination']
-            
-            eff = dt(issueDate.year, issueDate.month, issueDate.day)
-            mat = dt(maturityDate.year, maturityDate.month, maturityDate.day)
+        self._has_basket = False
+        try:
+            for key in treasuryYaml:
+                if key == 'future':
+                    self.future = Future.parse(treasuryYaml[key])
+                    continue
 
-            frb = FixedRateBond(
-                effective=eff,
-                termination=mat,
-                fixed_rate=item['fixed_rate'],
-                spec='ust'
-            )
+                if not cu.is_valid(key):
+                    raise ValueError('Bad cusip was given.')
 
-            treasury = Treasury(
-                treasury=frb, 
-                effective=eff, 
-                termination=mat,
-                price=item['price'],
-                fixed_rate=item['fixed_rate']
-            )
+                item = treasuryYaml[key]
+                issueDate = item['effective']
+                maturityDate = item['termination']
+                
+                eff = dt(issueDate.year, issueDate.month, issueDate.day)
+                mat = dt(maturityDate.year, maturityDate.month, maturityDate.day)
 
-            self.cusips[cusip] = treasury
+                frb = FixedRateBond(
+                    effective=eff,
+                    termination=mat,
+                    fixed_rate=item['fixed_rate'],
+                    spec='ust'
+                )
+
+                treasury = Treasury(
+                    treasury=frb, 
+                    effective=eff, 
+                    termination=mat,
+                    price=item['price'],
+                    fixed_rate=item['fixed_rate']
+                )
+
+                self.cusips[key] = treasury
+                self._has_basket = True
+        except Exception as e:
+            self._has_basket = False
 
     def build_from_text(self) -> TreasuryDict:
+        self._has_basket = False
         if len(self.cusips) == 0:
             return {}
         
@@ -104,9 +122,9 @@ class Basket():
         keys = '|'.join(self.cusips.keys())
         return md5(keys.encode()).hexdigest()
 
-    @staticmethod
-    def from_file(filename: str):
-        head, tail = os.path.splitext(filename)
+    @classmethod
+    def from_file(cls, filename: str):
+        _, tail = os.path.splitext(filename)
 
         tail = tail.lower()
 
@@ -114,31 +132,37 @@ class Basket():
         isYamlFile = tail in ['.yml', '.yaml']
 
         if isTextFile:
-            basket = Basket()
-            cusips = basket.read_from_text(filename)
-            basket.set_cusips(cusips)
-            basket.build_from_text()
-            return basket
+            return Basket.read_from_text(filename)
         
         if isYamlFile:
-            basket = Basket()
-            yml = basket.read_from_yaml(filename)
-            basket.build_from_yaml(yml)
-            return basket
+            return Basket.read_from_yaml(filename)
 
         return None
     
-    @staticmethod
-    def read_from_text(filename):
-        with open(filename, 'r') as f:
-            text = f.read()
-            lines = [t.strip() for t in text.splitlines()]
-            return dict.fromkeys(lines)
+    @classmethod
+    def read_from_text(cls, filename):
+        basket = None
+        try:
+            with open(filename, 'r') as f:
+                text = f.read()
+                lines = [t.strip() for t in text.splitlines()]
+                dictionary = dict.fromkeys(lines)
+                basket = Basket(Future.parse(''))
+                basket.set_cusips(dictionary)
+                basket.build_from_text()
+        except Exception as e:
+            return basket
 
-    @staticmethod
-    def read_from_yaml(filename):
+        return basket
+
+    @classmethod
+    def read_from_yaml(cls, filename):
+        basket = cls(Future.parse(''))
         with open(filename, 'r') as file:
-            return yaml.load(file, Loader=yaml.SafeLoader)
+            yml = yaml.load(file, Loader=yaml.SafeLoader)
+            basket.build_from_yaml(yml)
+
+        return basket
 
     def get_url(self, cusip) -> str:
         return __search_url__ + f'?cusip={cusip}&format=json' 
