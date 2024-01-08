@@ -3,6 +3,7 @@ typer
 requests
 pyyaml
 python-magic
+python-stdnum
 pytest
 pytest-cov
 pytest-mock
