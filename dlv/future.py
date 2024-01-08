@@ -51,7 +51,8 @@ class Future:
         m = re.match('(\\w{2})(\\w{1})(\\d{1,4})$', name)
 
         if m is None:
-            raise ValueError(__invalid_future_message__)
+            return Future('', 0, 0, 0)
+            # raise ValueError(__invalid_future_message__)
         
         if len(m.groups()) != 3: # type: ignore
             raise ValueError(__invalid_future_message__)
