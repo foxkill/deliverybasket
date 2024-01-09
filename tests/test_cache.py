@@ -2,9 +2,9 @@
 # dlv:tests:cache
 #
 
+import pytest
 from io import StringIO
 from unittest.mock import mock_open, patch
-import pytest
 from dlv.basket import Basket
 from dlv.cache import Cache
 from .basket_fixture import create_basket
@@ -26,7 +26,7 @@ def test_cache_put(create_basket: Basket, mocker):
         mo.side_effect = [out]
         r =  c.put(basket)
         assert r == True
-        assert out.mock_calls[1].args[0].strip() == 'future: ' + basket.future.long_code
+        assert out.mock_calls[1].args[0].strip() == 'future: ' + basket._future.long_code
 
 def test_cache_get(create_future):
     c = Cache()

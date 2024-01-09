@@ -1,6 +1,7 @@
 #
 # dlv:cli
 #
+import asyncio
 import typer
 from typing import Annotated, Optional
 from dlv import __app_name__, __version__, Basket, Future
@@ -44,18 +45,18 @@ def dlv(
     last: Annotated[Optional[str], typer.Option(help='The notianal coupon of the future')] = '',
 ):
     print(fromFile, toFile, future, coupon, first, last)
+    # basket = asyncio.run(Basket.from_file(fromFile))
+    basket = Basket.from_file(fromFile)
 
-    basket = Basket().from_file(fromFile)
     if basket is None:
         typer.echo('Could not create basket.')
         typer.Exit(1)
 
     if toFile and basket:
-        basket.serialize(toFile) # ignore
+        basket_str = basket.serialize()
 
     if printdlv and basket:
-        f = Future.parse(future)
-        basket.print(f)
+        basket.future = future
 
     # if basket.serialze('tests/ulh4.basket.yaml') == True:
         # print('Basket successfully serialized')

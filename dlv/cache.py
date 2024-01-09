@@ -19,7 +19,7 @@ class Cache():
             raise ValueError(f'Cant create cach directory: {self.get_cache_directory()}')
 
         serializedString = basket.serialize()
-        filename = self.get_filename(basket.future.long_code)
+        filename = self.get_filename(basket._future.long_code)
 
         with open(filename, 'w+') as f:
             f.write(serializedString)
