@@ -1,6 +1,7 @@
 #
 # Basket
 #
+import asyncio
 import datetime
 import os
 from typing import Dict, Iterable, Union
@@ -10,6 +11,8 @@ import yaml
 import magic
 from hashlib import md5
 from stdnum import cusip as cu
+
+from dlv.thttp import get
 from .future import Future
 from .treasury import Treasury
 
@@ -24,17 +27,25 @@ class Basket():
     def __init__(self, future: Future, treasuries: TreasuryDict = {}):
         self.cusips: TreasuryDict = treasuries
         self._has_basket = False
-        self.future = future
+        self._future = future
 
     def has_basket(self) -> bool:
         return self._has_basket
 
+    @property
+    def future(self):
+        return self.future
+    
+    @future.setter
+    def future(self, value: str):
+        self._future = value
+        
     def build_from_yaml(self, treasuryYaml: dict):
         self._has_basket = False
         try:
             for key in treasuryYaml:
                 if key == 'future':
-                    self.future = Future.parse(treasuryYaml[key])
+                    self._future = Future.parse(treasuryYaml[key])
                     continue
 
                 if not cu.is_valid(key):
@@ -67,12 +78,16 @@ class Basket():
         except Exception as e:
             self._has_basket = False
 
-    def build_from_text(self, treasuryText: Iterable) -> None:
+    async def build_from_text(self, treasuryText: Iterable) -> None:
         self._has_basket = False
         self.cusips = {}
-        
-        for cusip in treasuryText:
-            response = requests.get(self.get_url(cusip))
+
+        responses = await get(treasuryText)
+
+        for response in responses:
+            # response = requests.get(self.get_url(cusip))
+            if response is None:
+                continue
 
             if response.status_code != 200:
                 continue
@@ -109,14 +124,14 @@ class Basket():
                     fixed_rate=rate
                 )
 
-                self.cusips[cusip] = treasury
+                self.cusips[item['cusip']] = treasury
                 self._has_basket = True
 
     def get(self, key: str) -> Union[Treasury, None]:
         return self.cusips.get(key)
 
     def get_future(self) -> Future:
-        return self.future
+        return self._future
 
     def hashcode(self) -> str:
         keys = '|'.join(self.cusips.keys())
@@ -147,10 +162,10 @@ class Basket():
                 lines = [t.strip() for t in text.splitlines()]
                 dictionary = dict.fromkeys(lines)
                 basket = cls(Future.parse(''))
-                basket.build_from_text(dictionary)
+                # await basket.build_from_text(dictionary)
                 return basket
         except Exception as e:
-            pass
+            raise e
 
     @classmethod
     def read_from_yaml(cls, filename):
@@ -213,8 +228,8 @@ class Basket():
 
             strYaml += (treasury.to_yaml(cusip) + '\n\n')
 
-        if not self.future is None:
-            strYaml = f'future: {self.future.long_code}\n\n' + strYaml
+        if not self._future is None:
+            strYaml = f'future: {self._future.long_code}\n\n' + strYaml
 
 
         return strYaml

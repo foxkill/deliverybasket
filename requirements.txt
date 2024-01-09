@@ -7,4 +7,5 @@ python-stdnum
 pytest
 pytest-cov
 pytest-mock
+pytest-asyncio
 requests-mock
