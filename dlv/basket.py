@@ -24,10 +24,9 @@ TreasuryDict = Dict[str, Union[Treasury, None]]
 __search_url__ = 'https://www.treasurydirect.gov/TA_WS/securities/search'
 
 class Basket():
-    def __init__(self, future: Future, treasuries: TreasuryDict = {}):
+    def __init__(self, treasuries: TreasuryDict = {}):
         self.cusips: TreasuryDict = treasuries
         self._has_basket = False
-        self._future = future
 
     def has_basket(self) -> bool:
         return self._has_basket
@@ -38,14 +37,14 @@ class Basket():
     
     @future.setter
     def future(self, value: str):
-        self._future = value
+        self._future = Future.parse(value)
         
     def build_from_yaml(self, treasuryYaml: dict):
         self._has_basket = False
         try:
             for key in treasuryYaml:
                 if key == 'future':
-                    self._future = Future.parse(treasuryYaml[key])
+                    self.future = treasuryYaml[key]
                     continue
 
                 if not cu.is_valid(key):
@@ -169,7 +168,7 @@ class Basket():
 
     @classmethod
     def read_from_yaml(cls, filename):
-        basket = cls(Future.parse(''))
+        basket = cls()
         with open(filename, 'r') as file:
             yml = yaml.load(file, Loader=yaml.SafeLoader)
             basket.build_from_yaml(yml)
@@ -182,10 +181,8 @@ class Basket():
     def set_cusips(self, cusips: TreasuryDict):
         self.cusips = cusips
     
-    def print(self, ft: Future):
-        print(ft)
-
-        if len(self.cusips) == 0:
+    def print(self):
+        if not self.has_basket():
             raise ValueError('No available tresuries in basket')
 
         basket = [t.get_treasury() for t in self.cusips.values()] # type: ignore

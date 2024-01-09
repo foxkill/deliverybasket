@@ -46,12 +46,13 @@ def get_treasury_dict():
             'fixed_rate': 4.75,
         }
     }
+
 @pytest.mark.asyncio
 async def test_build_read_from_text(create_future, response_for_912810TV0):
     with patch('dlv.basket.open', mock_open(read_data=' \t912810TV0\n')) as mo:
         with requests_mock.Mocker() as mock:
             mock.get(__search_url__, json=response_for_912810TV0)
-            basket = await Basket.read_from_text('basket.txt')
+            basket = Basket.read_from_text('basket.txt')
             assert not basket is None
             assert basket.has_basket() == True
 
