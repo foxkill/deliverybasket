@@ -7,3 +7,4 @@ python-stdnum
 pytest
 pytest-cov
 pytest-mock
+requests-mock
