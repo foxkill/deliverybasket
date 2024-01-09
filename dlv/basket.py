@@ -3,7 +3,7 @@
 #
 import datetime
 import os
-from typing import Dict, Union
+from typing import Dict, Iterable, Union
 from rateslib import BondFuture, FixedRateBond, dt
 import requests
 import yaml
@@ -67,50 +67,50 @@ class Basket():
         except Exception as e:
             self._has_basket = False
 
-    def build_from_text(self) -> TreasuryDict:
+    def build_from_text(self, treasuryText: Iterable) -> None:
         self._has_basket = False
-        if len(self.cusips) == 0:
-            return {}
+        self.cusips = {}
         
-        for cusip in self.cusips:
+        for cusip in treasuryText:
             response = requests.get(self.get_url(cusip))
 
             if response.status_code != 200:
-                return {}
+                continue
 
             data = response.json()
 
             if len(data) == 0:
-                return {}
+                continue
 
-            item = data[0]
+            # Find the first non reopening entry
+            for item in data:
+                if item['reopening'] == 'Yes':
+                    continue
+                issueDate = datetime.datetime.strptime(item['issueDate'], '%Y-%m-%dT%H:%M:%S')
+                maturityDate = datetime.datetime.strptime(item['maturityDate'], '%Y-%m-%dT%H:%M:%S')
+                
+                eff = dt(issueDate.year, issueDate.month, issueDate.day)
+                mat = dt(maturityDate.year, maturityDate.month, maturityDate.day)
 
-            issueDate = datetime.datetime.strptime(item['issueDate'], '%Y-%m-%dT%H:%M:%S')
-            maturityDate = datetime.datetime.strptime(item['maturityDate'], '%Y-%m-%dT%H:%M:%S')
-            
-            eff = dt(issueDate.year, issueDate.month, issueDate.day)
-            mat = dt(maturityDate.year, maturityDate.month, maturityDate.day)
+                rate = float(item['interestRate'])
 
-            rate = float(item['interestRate'])
+                frb = FixedRateBond(
+                    effective=eff,
+                    termination=mat,
+                    fixed_rate=rate,
+                    spec='ust'
+                )
 
-            frb = FixedRateBond(
-                effective=eff,
-                termination=mat,
-                fixed_rate=rate,
-                spec='ust'
-            )
+                treasury = Treasury(
+                    treasury=frb, 
+                    effective=eff, 
+                    termination=mat,
+                    price=0,
+                    fixed_rate=rate
+                )
 
-            treasury = Treasury(
-                treasury=frb, 
-                effective=eff, 
-                termination=mat,
-                price=0,
-                fixed_rate=rate
-            )
-
-            self.cusips[cusip] = treasury
-
-        return self.cusips
+                self.cusips[cusip] = treasury
+                self._has_basket = True
 
     def get(self, key: str) -> Union[Treasury, None]:
         return self.cusips.get(key)
@@ -141,19 +141,16 @@ class Basket():
     
     @classmethod
     def read_from_text(cls, filename):
-        basket = None
         try:
             with open(filename, 'r') as f:
                 text = f.read()
                 lines = [t.strip() for t in text.splitlines()]
                 dictionary = dict.fromkeys(lines)
-                basket = Basket(Future.parse(''))
-                basket.set_cusips(dictionary)
-                basket.build_from_text()
+                basket = cls(Future.parse(''))
+                basket.build_from_text(dictionary)
+                return basket
         except Exception as e:
-            return basket
-
-        return basket
+            pass
 
     @classmethod
     def read_from_yaml(cls, filename):

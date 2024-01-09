@@ -2,9 +2,11 @@
 # dlv:tests:basket 
 #
 import pytest
+import requests_mock
+from unittest.mock import mock_open, patch
 from datetime import datetime
-from dlv.basket import Basket
-from .basket_fixture import create_basket
+from dlv.basket import Basket, __search_url__
+from .basket_fixture import create_basket, response_for_912810TV0
 
 @pytest.fixture
 def generate_bad_treasury_dict():
@@ -45,6 +47,22 @@ def get_treasury_dict(generate_cusips):
         }
     }
 
+def test_build_read_from_text(create_future):
+    with patch('dlv.basket.open', mock_open(read_data=' \t912810TV0\n')) as mo:
+        with requests_mock.Mocker() as mock:
+            mock.get(__search_url__, json=response_for_912810TV0)
+            basket = Basket.read_from_text('basket.txt')
+            assert not basket is None
+            assert basket.has_basket() == True
+
+def test_build_from_text(create_future, response_for_912810TV0):
+    treasuryDict = { '912810TV0': None }
+    basket = Basket(create_future)
+    with requests_mock.Mocker() as mock:
+        mock.get(__search_url__, json=response_for_912810TV0)
+        basket.build_from_text(treasuryDict) # type: ignore
+        assert basket.has_basket() == True
+    
 def test_build_from_yaml(get_treasury_dict, create_future):
     basket = Basket(create_future) 
     basket.build_from_yaml(get_treasury_dict)
@@ -59,7 +77,6 @@ def test_build_from_yaml_with_empty_dict( create_future):
     basket = Basket(create_future) 
     basket.build_from_yaml({})
     assert basket.has_basket() == False
-
 
 def test_hash_code(create_basket):
     basket = create_basket
