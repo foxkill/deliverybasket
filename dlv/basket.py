@@ -6,13 +6,10 @@ import datetime
 import os
 from typing import Dict, Iterable, Union
 from rateslib import BondFuture, FixedRateBond, dt
-import requests
 import yaml
-import magic
 from hashlib import md5
 from stdnum import cusip as cu
-
-from dlv.thttp import get
+from .thttp import get
 from .future import Future
 from .treasury import Treasury
 
@@ -21,7 +18,7 @@ from .treasury import Treasury
 # python 3.9
 TreasuryDict = Dict[str, Union[Treasury, None]]
 
-__search_url__ = 'https://www.treasurydirect.gov/TA_WS/securities/search'
+# __search_url__ = 'https://www.treasurydirect.gov/TA_WS/securities/search'
 
 class Basket():
     def __init__(self, treasuries: TreasuryDict = {}):
@@ -129,9 +126,6 @@ class Basket():
     def get(self, key: str) -> Union[Treasury, None]:
         return self.cusips.get(key)
 
-    def get_future(self) -> Future:
-        return self._future
-
     def hashcode(self) -> str:
         keys = '|'.join(self.cusips.keys())
         return md5(keys.encode()).hexdigest()
@@ -160,7 +154,7 @@ class Basket():
                 text = f.read()
                 lines = [t.strip() for t in text.splitlines()]
                 dictionary = dict.fromkeys(lines)
-                basket = cls(Future.parse(''))
+                basket = cls()
                 # await basket.build_from_text(dictionary)
                 return basket
         except Exception as e:
@@ -175,9 +169,6 @@ class Basket():
 
         return basket
 
-    def get_url(self, cusip) -> str:
-        return __search_url__ + f'?cusip={cusip}&format=json' 
-    
     def set_cusips(self, cusips: TreasuryDict):
         self.cusips = cusips
     
