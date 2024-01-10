@@ -15,11 +15,7 @@ def version(value: bool) -> None:
 app = typer.Typer(help=__app_name__)
 
 @app.command()
-def read_cusips():
-    pass
-
-@app.command()
-def dlv(
+def read(
     fromFile: Annotated[
         str, 
         typer.Option(
@@ -27,30 +23,49 @@ def dlv(
             '-f',
             help='The file to read the cusip''s of the treasuries from')
         ],
-    future: Annotated[
+    serialize: Annotated[Optional[str], typer.Option(
+        '--serialize',
+        '-s',
+        help='Write gathered informations about treasuries to a basket file')
+    ] = None, 
+):
+    pass
+
+@app.command()
+def dlv(
+    fromCache: Annotated[
         str, 
+        typer.Option(
+            '--from-cache',
+            '-f',
+            help='The file to read the cusip''s of the treasuries from')
+        ],
+    future: Annotated[
+        Optional[str], 
         typer.Option(
             '--future',
             '-t',
             help='Name of the future the basket is deliverable to. Examples are: TUU2, FVH4 etc.')
-        ],
-    printdlv: Annotated[Optional[bool], typer.Option(
-        '--print',
-        '-p',
-        help='Print the basket like bloombergs dlv function', 
-    )] = False,
+        ] = '',
+    printdlv: Annotated[
+        Optional[bool], 
+        typer.Option(
+            '--print',
+            '-p',
+            help='Print the basket like bloombergs dlv function', 
+        )] = False,
     toFile: Annotated[Optional[str], typer.Option(
         '--serialize',
         '-s',
         help='Write gathered informations about treasuries to basket file')
     ] = None, 
-    coupon: Annotated[Optional[float], typer.Option(help='The notianal coupon of the future')] = NOTIONAL_COUPON,
-    first: Annotated[Optional[str], typer.Option(help='The notianal coupon of the future')] = '',
-    last: Annotated[Optional[str], typer.Option(help='The notianal coupon of the future')] = '',
+    coupon: Annotated[Optional[float], typer.Option(help='The notional coupon of the future')] = NOTIONAL_COUPON,
+    first: Annotated[Optional[str], typer.Option(help='The first delivery day of the future')] = '',
+    last: Annotated[Optional[str], typer.Option(help='The last delivery day of the future')] = '',
 ):
     # print(fromFile, toFile, future, coupon, first, last)
     # basket = asyncio.run(Basket.from_file(fromFile))
-    basket = Basket.from_file(fromFile)
+    basket = Basket.from_file(fromCache)
 
     if basket is None:
         typer.echo('Could not create basket.')
