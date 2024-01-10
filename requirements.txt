@@ -4,6 +4,7 @@ requests
 pyyaml
 python-magic
 python-stdnum
+httpx
 pytest
 pytest-cov
 pytest-mock
