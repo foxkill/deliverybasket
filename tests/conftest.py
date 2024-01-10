@@ -1,12 +1,14 @@
 #
 # dlv:tests:conftest
 #
+from ast import List
+from typing import Generator
 import pytest
 
 from dlv.future import Future
 
 @pytest.fixture(autouse=True, name="generate_cusips")
-def generate_cusips():
+def generate_cusips() -> list[str]:
     return [
         '9128286Y1',
         '912828XW5',
@@ -15,7 +17,7 @@ def generate_cusips():
         '912828YA2',
         '9128282S8',
         '912828YF1',
-        '9128282W9',
+        '9128282W9'
     ]
 
 @pytest.fixture(autouse=True)
