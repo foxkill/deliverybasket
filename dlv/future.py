@@ -60,15 +60,15 @@ class Future:
         tenor = 0    
         try:
             tenor = TreasuryFutures[m.group(1).upper()]
-        except Exception as e:
-            raise e
+        except KeyError as e:
+            raise ValueError(__invalid_future_message__) from None
 
         month = 0
         try:
             month = FutureMonths[m.group(2).upper()]
         except Exception as e:
-            raise e
-        
+            raise ValueError(__invalid_contract_month__) from None
+
         if not month.name in ['H', 'M', 'U', 'Z']:
             raise ValueError(__invalid_contract_month__)
 
