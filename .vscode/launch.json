@@ -14,13 +14,13 @@
             "args": ["dlv", "--from-file=tests/basket.txt", "--first=2010-09-09"]
         },
         {
-            "name": "dlv [yaml]",
+            "name": "dlv [set price]",
             "type": "python",
             "request": "launch",
             "program": "main.py",
             "console": "integratedTerminal",
             "justMyCode": false,
-            "args": ["dlv", "--from-file=tests/ulh4.basket.yaml"]
+            "args": ["set", "--future=ulh4", "--price=107.843", "--cusip=912810SH2"]
         },
         {
             "name": "dlv [read basket from cusip file]",
@@ -29,7 +29,7 @@
             "program": "main.py",
             "console": "integratedTerminal",
             "justMyCode": false,
-            "args": ["read", "--from-file=tests/ulh4.ctd.basket.txt", "--future=ulh4"]
+            "args": ["init", "--from-file=tests/ulh4.ctd.basket.txt", "--future=ulh4"]
         },
         {
             "name": "dlv [print basket]",
@@ -38,7 +38,7 @@
             "program": "main.py",
             "console": "integratedTerminal",
             "justMyCode": false,
-            "args": ["dlv","--print", "--future=ulh4", "--price=130.84375", "--repo-rate=5.32"]
+            "args": ["dlv", "--print", "--future=ulh4", "--price=130.84375", "--repo-rate=5.32"]
         },
         {
             "name": "current file",
