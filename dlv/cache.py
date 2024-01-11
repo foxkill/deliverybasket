@@ -26,7 +26,9 @@ class Cache():
         
         return True
     
-    def get(self, filename: str) -> Union[Basket, None]:
+    def get(self, future: str) -> Union[Basket, None]:
+        f = Future.parse(future)
+        filename = self.get_filename(f.long_code)
         return Basket.from_file(filename)
 
     def get_filename(self, futureName: str) -> str:
