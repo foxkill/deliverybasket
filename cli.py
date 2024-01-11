@@ -16,14 +16,41 @@ def version(value: bool) -> None:
 app = typer.Typer(help=__app_name__)
 
 @app.command()
-def read(
+def set(
+    future: Annotated[
+        str, 
+        typer.Option(
+            '--future',
+            '-t',
+            help='Name of the future the basket is deliverable to. Examples are: TUU2, FVH4 etc.')
+        ],
+    cusip: Annotated[str, typer.Option(help='Set the price of the treasury with the given cusip number.')],
+    price: Annotated[float, typer.Option(help='The price to set for the given asset.')],
+):
+    c = Cache()
+    basket = c.get(future)
+    if basket is None:
+        typer.echo(f'Could not read basket file for the given future: {future}')
+        typer.Exit(2)
+    else:
+        treasury = basket.get(cusip)
+        if treasury is None:
+            typer.echo(f'Treasury with the cusip of {cusip} was not found')
+            typer.Exit(3)
+        else:
+            treasury.price = price
+            c.put(basket)
+            typer.echo('Price was successfully set.')
+
+@app.command()
+def init(
     fromFile: Annotated[
         str, 
         typer.Option(
             '--from-file',
             '-f',
             help='The file to read the cusip''s of the treasuries from')
-        ],
+    ],
     future: Annotated[
         str, 
         typer.Option(
@@ -31,23 +58,26 @@ def read(
             '-t',
             help='Name of the future the basket is deliverable to. Examples are: TUU2, FVH4 etc.')
     ],
-    serialize: Annotated[Optional[str], typer.Option(
-        '--serialize',
-        '-s',
-        help='Write gathered informations about treasuries to a basket file')
-    ] = None, 
+    noserialize: Annotated[Optional[bool], typer.Option(
+        '--no-serialize',
+        help='Do not write gathered informations about treasuries to a basket file')
+    ] = False, 
 ):
     basket = Basket.from_file(fromFile)
     if not basket is None:
         asyncio.run(basket.build())
-        basket.future = future
-        c = Cache()
-        c.put(basket)
+        if noserialize:
+            typer.echo('Data was read from treasury.gov but not serialized as --no-serialize option was given.')
+            typer.Exit(1)
+        else:
+            basket.future = future
+            c = Cache()
+            c.put(basket)
+            typer.echo('Tresuries were successfully read. Call dlv print next to see the contents of the basket of deliverables.')
+            typer.Exit(0)
         
-
-
 @app.command()
-def dlv(
+def print(
     future: Annotated[
         str, 
         typer.Option(
@@ -55,16 +85,11 @@ def dlv(
             '-t',
             help='Name of the future the basket is deliverable to. Examples are: TUU2, FVH4 etc.')
         ],
-    printdlv: Annotated[
-        Optional[bool], 
-        typer.Option(
-            '--print',
-            '-p',
-            help='Print the basket like bloombergs dlv function', 
-        )] = False,
-    coupon: Annotated[Optional[float], typer.Option(help='The notional coupon of the future')] = NOTIONAL_COUPON,
-    first: Annotated[Optional[str], typer.Option(help='The first delivery day of the future')] = '',
-    last: Annotated[Optional[str], typer.Option(help='The last delivery day of the future')] = '',
+    price: Annotated[float, typer.Option(help='The current price of the future')],
+    repoRate: Annotated[
+        float, 
+        typer.Option('--repo-rate', '-r', help='The current repo rate')
+    ],
 ):
     c = Cache()
     basket = c.get(future=future)
@@ -72,9 +97,8 @@ def dlv(
     if basket is None:
         typer.echo('Could not create basket.')
         typer.Exit(1)
-
-    if printdlv and basket:
-        basket.print(130+(27/32), 5.32)
+    else:
+        basket.print(price, repoRate)
 
 @app.callback()
 def main(
