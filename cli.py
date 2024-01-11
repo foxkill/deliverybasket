@@ -28,7 +28,13 @@ def set(
     price: Annotated[float, typer.Option(help='The price to set for the given asset.')],
 ):
     c = Cache()
-    basket = c.get(future)
+    basket = None
+    try:
+        basket = c.get(future)
+    except Exception as e:
+        typer.echo(f'Could not read basket from ({c.get_filename(future)})')
+        typer.Exit(2)
+
     if basket is None:
         typer.echo(f'Could not read basket file for the given future: {future}')
         typer.Exit(2)
@@ -92,13 +98,20 @@ def print(
     ],
 ):
     c = Cache()
-    basket = c.get(future=future)
-
-    if basket is None:
-        typer.echo('Could not create basket.')
+    basket = None
+    f = Future.parse(future)
+    invalid_message = f'Could not read basket from cache file {c.get_filename(f.long_code)}. Does it exist?'
+    try:
+        basket = c.get(future=future)
+        if basket is None:
+            typer.echo(invalid_message)
+            typer.Exit(1)
+        else:
+            basket.print(price, repoRate)
+    except Exception as e:
+        typer.echo(invalid_message)
         typer.Exit(1)
-    else:
-        basket.print(price, repoRate)
+
 
 @app.callback()
 def main(
