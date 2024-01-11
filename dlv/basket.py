@@ -25,13 +25,14 @@ class Basket():
     def __init__(self, treasuries: TreasuryDict = {}):
         self.cusips: TreasuryDict = treasuries
         self._has_basket = False
+        self._future = Future.parse('')
 
     def has_basket(self) -> bool:
         return self._has_basket
 
     @property
-    def future(self):
-        return self.future
+    def future(self) -> Future:
+        return self._future
     
     @future.setter
     def future(self, value: str):
@@ -262,8 +263,7 @@ class Basket():
 
             strYaml += (treasury.to_yaml(cusip) + '\n\n')
 
-        if not self._future is None:
-            strYaml = f'future: {self._future.long_code}\n\n' + strYaml
-
+        if not self._future.is_empty:
+            return f'future: {self._future.long_code}\n\n{strYaml}'
 
         return strYaml
