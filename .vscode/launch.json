@@ -23,7 +23,7 @@
             "args": ["set", "--future=ulh4", "--price=107.843", "--cusip=912810SH2"]
         },
         {
-            "name": "dlv [read basket from cusip file]",
+            "name": "dlv [init basket]",
             "type": "python",
             "request": "launch",
             "program": "main.py",
@@ -38,7 +38,7 @@
             "program": "main.py",
             "console": "integratedTerminal",
             "justMyCode": false,
-            "args": ["dlv", "--print", "--future=ulh4", "--price=130.84375", "--repo-rate=5.32"]
+            "args": ["print", "--future=ulh4", "--price=130.84375", "--repo-rate=5.32"]
         },
         {
             "name": "current file",
