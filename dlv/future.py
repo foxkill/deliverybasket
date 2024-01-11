@@ -21,19 +21,25 @@ class Future:
 
     @property
     def short_code(self) -> str:
-        return self.code + FutureMonths(self.month).name + str(self.year)[-1]
+        return '' if self.is_empty else \
+            self.code + FutureMonths(self.month).name + str(self.year)[-1]
         
     @property
     def median_code(self) -> str:
-        return self.code + FutureMonths(self.month).name + str(self.year)[-2]
+        return '' if self.is_empty else \
+            self.code + FutureMonths(self.month).name + str(self.year)[-2]
 
     @property
     def long_code(self) -> str:
-        return self.code + FutureMonths(self.month).name + str(self.year)
+        return '' if self.is_empty else str(self)
 
     @property
     def month_code(self) -> str:
-        return FutureMonths(self.month).name
+        return '' if self.is_empty else FutureMonths(self.month).name
+
+    @property
+    def is_empty(self):
+        return self.year == 0 and self.month == 0 and self.tenor == 0 and self.code == '' 
 
     def get_deliveries(self):
         cal =  get_calendar('nyc')
@@ -44,6 +50,7 @@ class Future:
         return hash(strRepr)
 
     def __str__(self) -> str:
+        if self.is_empty: return ''
         return self.code + FutureMonths(self.month).name + str(self.year)
 
     @classmethod
