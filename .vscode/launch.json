@@ -23,13 +23,13 @@
             "args": ["dlv", "--from-file=tests/ulh4.basket.yaml"]
         },
         {
-            "name": "dlv [read and write basket]",
+            "name": "dlv [read basket from cusip file]",
             "type": "python",
             "request": "launch",
             "program": "main.py",
             "console": "integratedTerminal",
             "justMyCode": false,
-            "args": ["dlv", "--from-file=tests/ulh4.ctd.basket.txt", "--tofile=tests/ulh4.ctd.basket"]
+            "args": ["read", "--from-file=tests/ulh4.ctd.basket.txt", "--future=ulh4"]
         },
         {
             "name": "dlv [print basket]",
@@ -38,7 +38,7 @@
             "program": "main.py",
             "console": "integratedTerminal",
             "justMyCode": false,
-            "args": ["dlv", "--from-file=tests/ulh4.ctd.basket.yaml", "--print", "--future=ulh4"]
+            "args": ["dlv","--print", "--future=ulh4", "--price=130.84375", "--repo-rate=5.32"]
         },
         {
             "name": "current file",
