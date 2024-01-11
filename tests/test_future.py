@@ -9,7 +9,7 @@ def test_parse():
     assert f.month == 3
     assert f.year == 2024
 
-def test_str():
+def test_str_representation():
     f = Future.parse('tuu2')
     assert str(f) == 'TUU2022'
 
@@ -38,4 +38,4 @@ def test_accept_only_valid_contract_months():
 
 def test_raise_error_if_garbage_string_is_given():
     with pytest.raises(ValueError, match=__invalid_future_message__):
-        f = Future.parse('tuM1_')
+        f = Future.parse('uhl4')
