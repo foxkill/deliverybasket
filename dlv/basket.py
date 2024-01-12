@@ -11,19 +11,15 @@ import yaml
 from hashlib import md5
 from stdnum import cusip as cu
 from .thttp import get
-from .future import Future
+from .future import Future, NOTIONAL_COUPON
 from .treasury import Treasury
-
-# type TreasuryDict = Dict[str, Treasury | None]
 
 # python 3.9
 TreasuryDict = Dict[str, Union[Treasury, None]]
 
-# __search_url__ = 'https://www.treasurydirect.gov/TA_WS/securities/search'
-
 class Basket():
     def __init__(self, treasuries: TreasuryDict = {}):
-        self.cusips: TreasuryDict = treasuries
+        self._cusips: TreasuryDict = treasuries
         self._has_basket = False
         self._future = Future.parse('')
 
@@ -71,7 +67,7 @@ class Basket():
                     fixed_rate=item['fixed_rate']
                 )
 
-                self.cusips[key] = treasury
+                self._cusips[key] = treasury
                 self._has_basket = True
         except Exception as e:
             self._has_basket = False
@@ -100,6 +96,12 @@ class Basket():
 
                 rate = float(item['interestRate'])
 
+                # usB = FixedRateBond(
+                #     effective=dt(1990, 4, 2), termination=dt(1992, 3, 31),
+                #     frequency="S", convention="ActActICMA", calc_mode="UST_31bii",
+                #     fixed_rate=8.5, calendar="nyc", ex_div=1, modifier="none",
+                # )
+
                 frb = FixedRateBond(
                     effective=eff,
                     termination=mat,
@@ -107,7 +109,7 @@ class Basket():
                     spec='ust'
                 )
 
-                # price=item.get('pricePer100', 100
+                # price=item.get('pricePer100', 100)
                 treasury = Treasury(
                     treasury=frb, 
                     effective=eff, 
@@ -116,69 +118,25 @@ class Basket():
                     fixed_rate=rate
                 )
 
-                self.cusips[item['cusip']] = treasury
+                self._cusips[item['cusip']] = treasury
                 self._has_basket = True
 
     async def build(self):
         self._has_basket = False
-        responses = await get(self.cusips.keys())
+        responses = await get(self._cusips.keys())
         await self.build_from_responses(responses)    
         return self
 
-    async def build_from_text(self, treasuryText: Iterable) -> None:
-        self._has_basket = False
-        self.cusips = {}
-
-        responses = await get(treasuryText)
-
-        for response in responses:
-            if response is None or response.status_code != 200:
-                continue
-
-            data = response.json()
-
-            if len(data) == 0:
-                continue
-
-            # Find the first non reopening entry
-            for item in data:
-                if item['reopening'] == 'Yes':
-                    continue
-                issueDate = datetime.datetime.strptime(item['issueDate'], '%Y-%m-%dT%H:%M:%S')
-                maturityDate = datetime.datetime.strptime(item['maturityDate'], '%Y-%m-%dT%H:%M:%S')
-                
-                eff = dt(issueDate.year, issueDate.month, issueDate.day)
-                mat = dt(maturityDate.year, maturityDate.month, maturityDate.day)
-
-                rate = float(item['interestRate'])
-
-                frb = FixedRateBond(
-                    effective=eff,
-                    termination=mat,
-                    fixed_rate=rate,
-                    spec='ust'
-                )
-
-                treasury = Treasury(
-                    treasury=frb, 
-                    effective=eff, 
-                    termination=mat,
-                    price=0,
-                    fixed_rate=rate
-                )
-
-                self.cusips[item['cusip']] = treasury
-                self._has_basket = True
-
     def get(self, key: str) -> Union[Treasury, None]:
-        return self.cusips.get(key)
+        return self._cusips.get(key)
 
     def hashcode(self) -> str:
-        keys = '|'.join(self.cusips.keys())
+        keys = '|'.join(self._cusips.keys())
         return md5(keys.encode()).hexdigest()
 
     @classmethod
     def from_file(cls, filename: str):
+        """Read a basket from a either a text fiel or yaml file"""
         _, tail = os.path.splitext(filename)
 
         tail = tail.lower()
@@ -196,14 +154,11 @@ class Basket():
     
     @classmethod
     def read_from_text(cls, filename):
-        try:
-            with open(filename, 'r') as f:
-                text = f.read()
-                lines = [t.strip() for t in text.splitlines()]
-                dictionary = dict.fromkeys(lines)
-                return cls(dictionary)
-        except Exception as e:
-            raise e
+        with open(filename, 'r') as f:
+            text = f.read()
+            lines = [t.strip() for t in text.splitlines()]
+            dictionary = dict.fromkeys(lines)
+            return cls(dictionary)
 
     @classmethod
     def read_from_yaml(cls, filename):
@@ -215,39 +170,42 @@ class Basket():
         return basket
 
     def set_cusips(self, cusips: TreasuryDict):
-        self.cusips = cusips
+        self._cusips = cusips
     
-    def print(self, future_price: float, repo_rate: float):
+    def get_calculation_mode(self) -> str:
+        return 'ust_long'
+    
+    def get_settlement_date(self, settlement: str) -> datetime.date:
+        return datetime.datetime.now() \
+            if len(settlement) == '' else \
+                datetime.datetime.strptime(settlement, '%Y-%m-%d')
+    
+    def print(self, future_price: float, repo_rate: float, settlement: str = ''):
         if not self.has_basket():
             raise ValueError('No available tresuries in basket.')
 
-        basket = [t.get_treasury() for t in self.cusips.values()] # type: ignore
+        date = self.get_settlement_date(settlement=settlement)
+        basket = [t.get_treasury() for t in self._cusips.values()] # type: ignore
 
         # TODO: if we have notes, then we must set calc_mode to ust_short.
         future = BondFuture(
-            coupon=6.0,
+            coupon=NOTIONAL_COUPON,
             delivery=(dt(2024, 3, 1), dt(2024, 3, 28)),
             basket=basket, # type: ignore
-            nominal=100e3,
             calendar="nyc",
             currency="usd",
-            # calc_mode='ust_short',
-            calc_mode='ust_long'
+            calc_mode=self.get_calculation_mode()
         )
 
-        prices = [t.price if not t is None else 0 for t in self.cusips.values()]
+        prices = [t.price if not t is None else 0 for t in self._cusips.values()]
         df = future.dlv(
             future_price=future_price,
             prices=prices,
             repo_rate=repo_rate,
-            settlement=dt(2024,1,5),
-            # delivery=dt(2024,3,28),
+            settlement=dt(date.year, date.month, date.day),
             convention='Act360',
         )
 
-        # 0.5980
-        # 0.8281
-        # usbf.basket
         print(df)
 
     @classmethod
@@ -256,8 +214,8 @@ class Basket():
 
     def serialize(self) -> str:
         strYaml = ''
-        for cusip in self.cusips:
-            treasury = self.cusips.get(cusip)
+        for cusip in self._cusips:
+            treasury = self._cusips.get(cusip)
             if treasury is None:
                 continue
 

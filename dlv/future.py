@@ -59,14 +59,14 @@ class Future:
 
         if m is None:
             return Future('', 0, 0, 0)
-            # raise ValueError(__invalid_future_message__)
         
         if len(m.groups()) != 3: # type: ignore
             raise ValueError(__invalid_future_message__)
 
         tenor = 0    
         try:
-            tenor = TreasuryFutures[m.group(1).upper()]
+            tenor_str = m.group(1).upper()
+            tenor = TreasuryFutures[tenor_str]
         except KeyError as e:
             raise ValueError(__invalid_future_message__) from None
 

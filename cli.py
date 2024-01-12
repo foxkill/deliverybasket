@@ -2,15 +2,15 @@
 # dlv:cli
 #
 import asyncio
+import datetime
 import typer
 from typing import Annotated, Optional
 from dlv import __app_name__, __version__, Basket, Future
 from dlv.cache import Cache
-from dlv.future import NOTIONAL_COUPON
 
 def version(value: bool) -> None:
     if value:
-        typer.echo(__app_name__ + ' v' + __version__)
+        typer.echo(f'{__app_name__} v{__version__}')
         raise typer.Exit(0)
 
 app = typer.Typer(help=__app_name__)
@@ -96,22 +96,29 @@ def print(
         float, 
         typer.Option('--repo-rate', '-r', help='The current repo rate')
     ],
+    settlement: Annotated[
+        str, 
+        typer.Option(
+            '--trade',
+            '-d',
+            help='The date of the trade. Like trade: --date=2022-10-1'
+        )
+    ] = datetime.datetime.strftime(datetime.datetime.now(), '%Y-%m-%d')
 ):
     c = Cache()
     basket = None
     f = Future.parse(future)
     invalid_message = f'Could not read basket from cache file {c.get_filename(f.long_code)}. Does it exist?'
     try:
-        basket = c.get(future=future)
+        basket = c.get(future_name=future)
         if basket is None:
             typer.echo(invalid_message)
             typer.Exit(1)
         else:
-            basket.print(price, repoRate)
+            basket.print(price, repoRate, settlement)
     except Exception as e:
         typer.echo(invalid_message)
         typer.Exit(1)
-
 
 @app.callback()
 def main(

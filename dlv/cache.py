@@ -11,10 +11,8 @@ CACHE_DIRECTORY: Final = '.bcache'
 CACHE_FILE_EXTENSION: Final = '.yaml'
 
 class Cache():
-    def __init__(self):
-        pass
-
     def put(self, basket: Basket):
+        """Write the basket to a cache file"""
         if not self.create_cache_dir_if_not_exits():
             raise ValueError(f'Cant create cach directory: {self.get_cache_directory()}')
 
@@ -26,15 +24,15 @@ class Cache():
         
         return True
     
-    def get(self, future: str) -> Union[Basket, None]:
-        f = Future.parse(future)
+    def get(self, future_name: str) -> Union[Basket, None]:
+        f = Future.parse(future_name)
         filename = self.get_filename(f.long_code)
         return Basket.from_file(filename)
 
-    def get_filename(self, futureName: str) -> str:
+    def get_filename(self, future_name: str) -> str:
         return self.get_cache_directory() + \
             os.sep + \
-            futureName.lower() + \
+            future_name.lower() + \
             CACHE_FILE_EXTENSION
 
     def get_cache_directory(self) -> str:
