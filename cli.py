@@ -116,7 +116,7 @@ def print(
             typer.Exit(1)
         else:
             basket.print(price, repoRate, settlement)
-    except Exception as e:
+    except ValueError as e:
         typer.echo(invalid_message)
         typer.Exit(1)
 
