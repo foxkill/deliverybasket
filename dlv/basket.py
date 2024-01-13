@@ -173,6 +173,7 @@ class Basket():
         self._cusips = cusips
     
     def get_calculation_mode(self) -> str:
+        # TODO: get type of treasuries in the list and determine calculation mode.
         return 'ust_long'
     
     def get_settlement_date(self, settlement: str) -> datetime.date:
@@ -185,7 +186,7 @@ class Basket():
             raise ValueError('No available tresuries in basket.')
 
         date = self.get_settlement_date(settlement=settlement)
-        basket = [t.get_treasury() for t in self._cusips.values()] # type: ignore
+        basket = [t.treasury for t in self._cusips.values()] # type: ignore
 
         # TODO: if we have notes, then we must set calc_mode to ust_short.
         future = BondFuture(
@@ -206,6 +207,7 @@ class Basket():
             convention='Act360',
         )
 
+        df['CUSIP'] = [cusip for cusip in self._cusips.keys()]
         print(df)
 
     @classmethod
