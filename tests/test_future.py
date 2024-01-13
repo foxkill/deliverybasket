@@ -1,7 +1,7 @@
 #
 # dlv:tests:future
 #
-import datetime
+import datetime as dt
 import pytest
 from dlv.future import Future, __invalid_contract_month__, __invalid_future_message__
 
@@ -10,13 +10,32 @@ def test_parse():
     assert f.month == 3
     assert f.year == 2024
 
-def test_get_first_delivery_day():
-    f = Future.parse('ulm2')
-    assert f.first_delivery_day == datetime.date(2022, 6, 1)
+def test_get_first_delivery_day_for_short_tenors():
+    f = Future.parse('fvm2')
+    assert f.first_delivery_day == dt.date(2022, 6, 1)
 
-def test_get_last_delivery_day():
+@pytest.mark.parametrize(
+    "future, expected",
+    [
+        ('tuh4', dt.date(2024, 4, 3)),
+        ('tum4', dt.date(2024,  7, 3)),
+        ('tuu4', dt.date(2024,  10, 3)),
+        ('fvm2', dt.date(2022, 7, 6)),
+        ('tnh4', dt.date(2024, 3, 28)),
+        ('ulh4', dt.date(2024, 3, 28)),
+    ]
+)
+def test_get_last_delivery_day_for_short_tenors(future, expected):
+    f = Future.parse(future)
+    assert f.get_last_delivery_day() == expected
+
+def test_get_first_delivery_day_for_long_tenors():
     f = Future.parse('ulm2')
-    assert f.last_delivery_day == datetime.date(2022, 6, 30)
+    assert f.first_delivery_day == dt.date(2022, 6, 1)
+
+def test_get_last_delivery_day_for_long_tenors():
+    f = Future.parse('ulm2')
+    assert f.get_last_delivery_day() == dt.date(2022, 6, 30)
 
 def test_str_representation():
     f = Future.parse('tuu0')
