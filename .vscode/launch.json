@@ -38,7 +38,7 @@
             "program": "main.py",
             "console": "integratedTerminal",
             "justMyCode": false,
-            "args": ["print", "--future=ulh4", "--price=130.84375", "--repo-rate=5.32"]
+            "args": ["print", "--future=tuu2", "--price=110.355468", "--repo-rate=0.172", "--trade=2020-06-22"]
         },
         {
             "name": "current file",
