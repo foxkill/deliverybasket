@@ -1,6 +1,7 @@
 #
 # dlv:tests:future
 #
+import datetime
 import pytest
 from dlv.future import Future, __invalid_contract_month__, __invalid_future_message__
 
@@ -9,9 +10,17 @@ def test_parse():
     assert f.month == 3
     assert f.year == 2024
 
+def test_get_first_delivery_day():
+    f = Future.parse('ulm2')
+    assert f.first_delivery_day == datetime.date(2022, 6, 1)
+
+def test_get_last_delivery_day():
+    f = Future.parse('ulm2')
+    assert f.last_delivery_day == datetime.date(2022, 6, 30)
+
 def test_str_representation():
-    f = Future.parse('tuu2')
-    assert str(f) == 'TUU2022'
+    f = Future.parse('tuu0')
+    assert str(f) == 'TUU2020'
 
 def test_shortname(): 
     f = Future.parse('tNm3')

@@ -1,10 +1,12 @@
 #
 # dlv:future
 #
-from dataclasses import dataclass
+from dataclasses import InitVar, dataclass, field
+import datetime
 import re
-from rateslib import get_calendar
-from typing import Final
+from calendar import monthrange 
+from rateslib.calendars import _is_eom, _is_som, _is_holiday, get_calendar, CustomBusinessDay
+from typing import Final, Optional, Union
 from .enums import FutureMonths, TreasuryFutures
 
 NOTIONAL_COUPON: Final = 6.0
@@ -12,12 +14,48 @@ NOTIONAL_COUPON: Final = 6.0
 __invalid_future_message__ = 'Not a valid future code given. Must be one of TU, FV, Z3N, TY, TN, TWE, US, UL'
 __invalid_contract_month__ = 'Invalid contract month given. Only H, M, U and Z are valid.'
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, repr=False)
 class Future:
     code: str
     tenor: int
     month: int
     year: int
+    cal: Union[CustomBusinessDay, tuple[CustomBusinessDay, str]] = field(
+        init=False
+    )
+    
+    # UB, UBE, TWE, ZB, TN, ZN
+    # first position day - 2 days before first delivery day in delivery month.
+    # last position day - 2 days before last delivery day in delivery month
+    # ZT, Z3N, ZF 
+    # first positon - 2 days before FDD
+    # last position - 1 BD after contract delivery month.
+    @property
+    def last_delivery_day(self) -> datetime.date:
+        """The last_delivery_day property."""
+        lastday = monthrange(self.year, self.month)[1]
+        dt = datetime.datetime(self.year, self.month, lastday)
+        mcal = get_calendar('nyc')
+        for _ in range(lastday, -1, -1):
+            if _is_holiday(dt, mcal) == False: # type: ignore
+                break
+            dt -= datetime.timedelta(days = 1)
+
+        return dt.date()
+        
+    @property
+    def first_delivery_day(self) -> datetime.date:
+        """Get the first delivery day of the future contract"""
+        mcal = get_calendar('nyc')
+        dt = datetime.datetime(self.year, self.month, 1)
+        lastday = monthrange(self.year, self.month)[1]
+        for _ in range(lastday):
+            result = _is_holiday(dt, mcal) # type: ignore
+            if result == False:
+                break
+            dt += datetime.timedelta(days=1)
+
+        return dt.date()
 
     @property
     def short_code(self) -> str:
