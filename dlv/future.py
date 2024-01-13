@@ -33,7 +33,7 @@ class Future:
     # last position - 1 BD after contract delivery month.
         
     @property
-    def first_delivery_day(self) -> datetime.date:
+    def first_delivery_day(self) -> datetime.datetime:
         """Get the first delivery day of the future contract"""
         mcal = get_calendar('nyc')
         dt = datetime.datetime(self.year, self.month, 1)
@@ -45,7 +45,7 @@ class Future:
                 break
             dt += datetime.timedelta(days=1)
 
-        return dt.date()
+        return dt
 
     @property
     def short_code(self) -> str:
