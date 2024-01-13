@@ -191,7 +191,7 @@ class Basket():
         # TODO: if we have notes, then we must set calc_mode to ust_short.
         future = BondFuture(
             coupon=NOTIONAL_COUPON,
-            delivery=(dt(2024, 3, 1), dt(2024, 3, 28)),
+            delivery=(self.future.first_delivery_day, self.future.get_last_delivery_day()), # type:ignore
             basket=basket, # type: ignore
             calendar="nyc",
             currency="usd",

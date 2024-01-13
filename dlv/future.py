@@ -124,7 +124,7 @@ class NoteFuture(Future):
     # ZT, Z3N, ZF 
     # first positon - 2 days before FDD
     # last position - 1 BD after contract delivery month.
-    def get_last_delivery_day(self) -> date:
+    def get_last_delivery_day(self) -> datetime.datetime:
         """Get the last delivery day for note futures"""
         lastday = monthrange(self.year, self.month)[1]
 
@@ -149,13 +149,13 @@ class NoteFuture(Future):
                 business_days -= 1
                 dt += datetime.timedelta(days = 1)
 
-        return dt.date()
+        return dt
 
 class BondFuture(Future):
     # UB, UBE, TWE, ZB, TN, ZN
     # first position day - 2 days before first delivery day in delivery month.
     # last position day - 2 days before last delivery day in delivery month
-    def get_last_delivery_day(self) -> date:
+    def get_last_delivery_day(self) -> datetime.datetime:
         """The last_delivery_day property."""
         business_days = 1
     
@@ -168,4 +168,4 @@ class BondFuture(Future):
             if (dt.weekday() >= 5 or _is_holiday(dt, mcal)) == False: # type: ignore
                 business_days -= 1
 
-        return dt.date()
+        return dt

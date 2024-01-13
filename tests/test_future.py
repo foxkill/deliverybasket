@@ -17,12 +17,12 @@ def test_get_first_delivery_day_for_short_tenors():
 @pytest.mark.parametrize(
     "future, expected",
     [
-        ('tuh4', dt.date(2024, 4, 3)),
-        ('tum4', dt.date(2024,  7, 3)),
-        ('tuu4', dt.date(2024,  10, 3)),
-        ('fvm2', dt.date(2022, 7, 6)),
-        ('tnh4', dt.date(2024, 3, 28)),
-        ('ulh4', dt.date(2024, 3, 28)),
+        ('tuh4', dt.datetime(2024, 4, 3)),
+        ('tum4', dt.datetime(2024,  7, 3)),
+        ('tuu4', dt.datetime(2024,  10, 3)),
+        ('fvm2', dt.datetime(2022, 7, 6)),
+        ('tnh4', dt.datetime(2024, 3, 28)),
+        ('ulh4', dt.datetime(2024, 3, 28)),
     ]
 )
 def test_get_last_delivery_day_for_short_tenors(future, expected):
