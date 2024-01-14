@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import enum
 
 import re
-from typing import Final
+from typing import Final, Optional
 
 class QuoteStyle(enum.IntFlag):
     DETECT = 0
@@ -110,8 +110,6 @@ def parse_treasury_price(number: str, fraction: str, fraction32: str) -> float:
 
     fraction_index = int(fraction32)
 
-    debug = ((int(fraction) + FRACTION32_BOND.get(fraction_index, 0))/32)
-
     price += ((int(fraction) + FRACTION32_BOND.get(fraction_index, 0))/32)
 
     return price
@@ -134,7 +132,7 @@ def detect_quote_style(delimiter_frac: str, delimiter32: str) -> QuoteStyle:
 
     return QuoteStyle.BOND
 
-PARSER: Final = {
+STYLE_PARSERS: Final = {
     QuoteStyle.BOND: parse_treasury_price,
     QuoteStyle.BOND_FUTURE: parse_bond_future_price,
     QuoteStyle.NOTE_FUTURE: parse_note_future_price,
@@ -144,10 +142,14 @@ PARSER: Final = {
 
 @dataclass
 class Quote:
+    """Represents a financial quote"""
     price: float
 
     @classmethod
     def parse(cls, quote: str, quotestyle = QuoteStyle.DETECT):
+        if not isinstance(quote, str):
+            raise TypeError('quote must be a string')
+
         price = 0
         regex = r"(?P<number>^\d+)(?P<delimiter_frac>[\.\-\'])?(?P<fraction>\d{2})?(?P<delimiter32>\'?)(?P<fraction32>\d+)?"
         matches = re.finditer(regex, quote, re.MULTILINE)
@@ -157,14 +159,16 @@ class Quote:
             fraction =  match.group('fraction') 
             fraction32 = match.group('fraction32')
 
-            style = quotestyle if quotestyle != QuoteStyle.DETECT else \
-                detect_quote_style(match.group('delimiter_frac'), match.group('delimiter32'))
+            if quotestyle == QuoteStyle.DETECT or quotestyle is None:
+                style = detect_quote_style(match.group('delimiter_frac'), match.group('delimiter32'))
+            else:
+                style = quotestyle
 
             number = '0' if number is None else number
             fraction = '0' if fraction is None else fraction
             fraction32 = '0' if fraction32 is None else fraction32
 
-            fn = PARSER.get(style, parse_none)
+            fn = STYLE_PARSERS.get(style, parse_none)
             price = fn(number, fraction, fraction32)
             break
 
