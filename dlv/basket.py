@@ -176,22 +176,26 @@ class Basket():
         # TODO: get type of treasuries in the list and determine calculation mode.
         return 'ust_long'
     
-    def get_settlement_date(self, settlement: str) -> datetime.date:
+    def parse_date(self, settlement: str) -> datetime.date:
         return datetime.datetime.now() \
             if len(settlement) == '' else \
                 datetime.datetime.strptime(settlement, '%Y-%m-%d')
     
-    def print(self, future_price: float, repo_rate: float, settlement: str = ''):
+    def print(self, future_price: float, repo_rate: float, settlement: str = '', ldd: str = ''):
         if not self.has_basket():
             raise ValueError('No available tresuries in basket.')
 
-        date = self.get_settlement_date(settlement=settlement)
+        last_delivery_day = self.future.get_last_delivery_day() \
+            if ldd == '' else self.parse_date(ldd)
+
+        date = self.parse_date(settlement=settlement)
         basket = [t.treasury for t in self._cusips.values()] # type: ignore
 
+        print(f'LDD: {self.future.get_last_delivery_day()}')
         # TODO: if we have notes, then we must set calc_mode to ust_short.
         future = BondFuture(
             coupon=NOTIONAL_COUPON,
-            delivery=(self.future.first_delivery_day, self.future.get_last_delivery_day()), # type:ignore
+            delivery=(self.future.first_delivery_day, last_delivery_day), # type:ignore
             basket=basket, # type: ignore
             calendar="nyc",
             currency="usd",
@@ -207,6 +211,8 @@ class Basket():
             convention='Act360',
         )
 
+        df['Gross Basis'] *= 32
+        df['Net Basis'] *= 32
         df['CUSIP'] = [cusip for cusip in self._cusips.keys()]
         print(df)
 
