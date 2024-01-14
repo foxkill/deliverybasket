@@ -10,6 +10,8 @@ from rateslib import BondFuture, FixedRateBond, dt
 import yaml
 from hashlib import md5
 from stdnum import cusip as cu
+
+from .quote import Quote
 from .thttp import get
 from .future import Future, NOTIONAL_COUPON
 from .treasury import Treasury
@@ -181,10 +183,11 @@ class Basket():
             if len(settlement) == '' else \
                 datetime.datetime.strptime(settlement, '%Y-%m-%d')
     
-    def print(self, future_price: float, repo_rate: float, settlement: str = '', ldd: str = ''):
+    def print(self, future_price: str, repo_rate: float, settlement: str = '', ldd: str = ''):
         if not self.has_basket():
             raise ValueError('No available tresuries in basket.')
 
+        qprice = Quote.parse(future_price)
         last_delivery_day = self.future.get_last_delivery_day() \
             if ldd == '' else self.parse_date(ldd)
 
@@ -192,6 +195,7 @@ class Basket():
         basket = [t.treasury for t in self._cusips.values()] # type: ignore
 
         print(f'LDD: {self.future.get_last_delivery_day()}')
+        print(qprice.price)
         # TODO: if we have notes, then we must set calc_mode to ust_short.
         future = BondFuture(
             coupon=NOTIONAL_COUPON,
@@ -204,7 +208,7 @@ class Basket():
 
         prices = [t.price if not t is None else 0 for t in self._cusips.values()]
         df = future.dlv(
-            future_price=future_price,
+            future_price=qprice.price,
             prices=prices,
             repo_rate=repo_rate,
             settlement=dt(date.year, date.month, date.day),

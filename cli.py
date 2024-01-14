@@ -91,7 +91,7 @@ def print(
             '-t',
             help='Name of the future the basket is deliverable to. Examples are: TUU2, FVH4 etc.')
         ],
-    price: Annotated[float, typer.Option(help='The current price of the future')],
+    price: Annotated[str, typer.Option(help='The current price of the future')],
     repoRate: Annotated[
         float, 
         typer.Option('--repo-rate', '-r', help='The current repo rate')
