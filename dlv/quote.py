@@ -33,13 +33,14 @@ FRACTION32_NOTE: Final = {
 }
 
 FRACTION32_SHORT_TERM_NOTE = {
-    1: 1/32/8,
-    2: 2/32/8,
-    3: 3/32/8,
-    4: 4/32/8,
-    5: 5/32/8,
-    6: 6/32/8,
-    7: 8/32/8,
+    1: 0.125,
+    2: 0.25,
+    3: 0.375,
+    4: 0,
+    5: 0.5,
+    6: 0.625,
+    7: 0.75,
+    8: 0.875,
 }
 
 def parse_short_term_note_future_price(number: str, fraction: str, fraction32: str) -> float:
@@ -53,10 +54,7 @@ def parse_short_term_note_future_price(number: str, fraction: str, fraction32: s
     else:    
         fraction_index = int(fraction32)
 
-        debug =  FRACTION32_SHORT_TERM_NOTE.get(fraction_index, 0)
-        price += \
-            (int(fraction)/32) + \
-            FRACTION32_SHORT_TERM_NOTE.get(fraction_index, 0)
+        price += ((int(fraction) + FRACTION32_SHORT_TERM_NOTE.get(fraction_index, 0))/32)
 
     return price
 
@@ -94,7 +92,7 @@ def parse_bond_future_price(number: str, fraction: str, fraction32: str) -> floa
 
     return price
 
-def parse_tresury_price(number: str, fraction: str, fraction32: str) -> float:
+def parse_treasury_price(number: str, fraction: str, fraction32: str) -> float:
     """Parse the price of a treasury bond, note etc."""
     price = 0
 
@@ -103,17 +101,18 @@ def parse_tresury_price(number: str, fraction: str, fraction32: str) -> float:
 
     if fraction32.isnumeric() and not (fraction32.isnumeric() or fraction32 != '+'):
         price += (float(fraction) / 32)
-    else:    
-        fraction_index = '0'
+        return price
 
-        if fraction32 == '+':
-            fraction_index = '4'
+    fraction_index = '0'
 
-        fraction_index = int(fraction32)
+    if fraction32 == '+':
+        fraction_index = '4'
 
-        price += \
-            (int(fraction) + \
-            FRACTION32_BOND.get(fraction_index, 0))/32
+    fraction_index = int(fraction32)
+
+    debug = ((int(fraction) + FRACTION32_BOND.get(fraction_index, 0))/32)
+
+    price += ((int(fraction) + FRACTION32_BOND.get(fraction_index, 0))/32)
 
     return price
 
@@ -136,7 +135,7 @@ def detect_quote_style(delimiter_frac: str, delimiter32: str) -> QuoteStyle:
     return QuoteStyle.BOND
 
 PARSER: Final = {
-    QuoteStyle.BOND: parse_tresury_price,
+    QuoteStyle.BOND: parse_treasury_price,
     QuoteStyle.BOND_FUTURE: parse_bond_future_price,
     QuoteStyle.NOTE_FUTURE: parse_note_future_price,
     QuoteStyle.SHORT_NOTE_FUTURE: parse_short_term_note_future_price,
@@ -150,7 +149,7 @@ class Quote:
     @classmethod
     def parse(cls, quote: str, quotestyle = QuoteStyle.DETECT):
         price = 0
-        regex = r"(?P<number>^\d+)(?P<delimiter_frac>[\.\-\'])?(?P<fraction>\d{2})?(?P<delimiter32>'?)(?P<fraction32>\d\+)?"
+        regex = r"(?P<number>^\d+)(?P<delimiter_frac>[\.\-\'])?(?P<fraction>\d{2})?(?P<delimiter32>\'?)(?P<fraction32>\d+)?"
         matches = re.finditer(regex, quote, re.MULTILINE)
 
         for matchnum, match in enumerate(matches, start=1):
