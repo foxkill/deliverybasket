@@ -103,7 +103,14 @@ def print(
             '-d',
             help='The date of the trade. Like trade: --date=2022-10-1'
         )
-    ] = datetime.datetime.strftime(datetime.datetime.now(), '%Y-%m-%d')
+    ] = datetime.datetime.strftime(datetime.datetime.now(), '%Y-%m-%d'),
+    ldd: Annotated[
+        Optional[str],
+        typer.Option(
+            '--ldd',
+            help='The last delivery day of the future contract'
+        )
+    ] = None
 ):
     c = Cache()
     basket = None
