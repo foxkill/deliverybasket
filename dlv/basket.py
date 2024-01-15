@@ -11,7 +11,7 @@ import yaml
 from hashlib import md5
 from stdnum import cusip as cu
 
-from .quote import Quote
+from .quote import Quote, QuoteStyle
 from .thttp import get
 from .future import Future, NOTIONAL_COUPON
 from .treasury import Treasury
@@ -176,7 +176,7 @@ class Basket():
     
     def get_calculation_mode(self) -> str:
         # TODO: get type of treasuries in the list and determine calculation mode.
-        return 'ust_long'
+        return 'ust_short'
     
     def parse_date(self, settlement: str) -> datetime.date:
         return datetime.datetime.now() \
@@ -187,7 +187,7 @@ class Basket():
         if not self.has_basket():
             raise ValueError('No available tresuries in basket.')
 
-        qprice = Quote.parse(future_price)
+        qprice = Quote.parse(future_price, QuoteStyle.DETECT)
         last_delivery_day = self.future.get_last_delivery_day() \
             if ldd == '' else self.parse_date(ldd)
 
@@ -215,9 +215,11 @@ class Basket():
             convention='Act360',
         )
 
+
         df['Gross Basis'] *= 32
         df['Net Basis'] *= 32
         df['CUSIP'] = [cusip for cusip in self._cusips.keys()]
+        df = df.sort_values('Implied Repo', ascending=False)
         print(df)
 
     @classmethod
