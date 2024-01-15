@@ -31,9 +31,7 @@ class Future:
     # ZT, Z3N, ZF 
     # first positon - 2 days before FDD
     # last position - 1 BD after contract delivery month.
-        
-    @property
-    def first_delivery_day(self) -> datetime.datetime:
+    def get_first_delivery_day(self) -> datetime.datetime:
         """Get the first delivery day of the future contract"""
         mcal = get_calendar('nyc')
         dt = datetime.datetime(self.year, self.month, 1)

@@ -12,7 +12,7 @@ def test_parse():
 
 def test_get_first_delivery_day_for_short_tenors():
     f = Future.parse('fvm2')
-    assert f.first_delivery_day == dt.date(2022, 6, 1)
+    assert f.get_first_delivery_day() == dt.datetime(2022, 6, 1)
 
 @pytest.mark.parametrize(
     "future, expected",
@@ -31,11 +31,11 @@ def test_get_last_delivery_day_for_short_tenors(future, expected):
 
 def test_get_first_delivery_day_for_long_tenors():
     f = Future.parse('ulm2')
-    assert f.first_delivery_day == dt.date(2022, 6, 1)
+    assert f.get_first_delivery_day() == dt.datetime(2022, 6, 1)
 
 def test_get_last_delivery_day_for_long_tenors():
     f = Future.parse('ulm2')
-    assert f.get_last_delivery_day() == dt.date(2022, 6, 30)
+    assert f.get_last_delivery_day() == dt.datetime(2022, 6, 30)
 
 def test_str_representation():
     f = Future.parse('tuu0')
