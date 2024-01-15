@@ -33,18 +33,17 @@ FRACTION32_NOTE: Final = {
 }
 
 FRACTION32_SHORT_TERM_NOTE = {
-    1: 0.125,
-    2: 0.25,
-    3: 0.375,
-    4: 0,
-    5: 0.5,
-    6: 0.625,
-    7: 0.75,
-    8: 0.875,
+    1: 0.125, # 108'00'1
+    2: 0.25,  # 108'00'2
+    3: 0.375, # 108'00'3
+    5: 0.5,   # 108'00'5 -> 1/2 2/4 4/8
+    6: 0.625, # 108'00'6 -> 5/8
+    7: 0.75,  # 108'00'7 -> 3/4
+    8: 0.875,  # 108'00'8 -> 7/8
 }
 
 def parse_short_term_note_future_price(number: str, fraction: str, fraction32: str) -> float:
-    """Parse the price of a note future, TN, ZN, ZF, ZT"""
+    """Parse the price of a note future, Z3N, ZT"""
     price = 0
     if number.isnumeric():
         price += int(number)
@@ -58,9 +57,8 @@ def parse_short_term_note_future_price(number: str, fraction: str, fraction32: s
 
     return price
 
-
 def parse_note_future_price(number: str, fraction: str, fraction32: str) -> float:
-    """Parse the price of a note future, TN, ZN, ZF, ZT"""
+    """Parse the price of a note future, TN, ZN, ZF"""
     price = 0
     if number.isnumeric():
         price += int(number)
