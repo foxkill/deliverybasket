@@ -86,6 +86,10 @@ def parse_bond_future_price(number: str, fraction: str, fraction32: str) -> floa
         price += int(number)
 
     if not fraction is None:
+        if not fraction32 is None:
+            if fraction32.isnumeric():
+                fraction += fraction32
+
         price += (float(fraction) / 32)
 
     return price
@@ -104,7 +108,7 @@ def parse_treasury_price(number: str, fraction: str, fraction32: str) -> float:
     fraction_index = '0'
 
     if fraction32 == '+':
-        fraction_index = '4'
+        fraction32 = '4'
 
     fraction_index = int(fraction32)
 
@@ -119,16 +123,27 @@ def parse_decimal(number: str, fraction: str, fraction32: str) -> float:
 def parse_none(number: str, fraction: str, fraction32: str) -> float:
     return 0
 
-def detect_quote_style(delimiter_frac: str, delimiter32: str) -> QuoteStyle:
+def detect_quote_style(fraction32: str, delimiter_frac: str, delimiter32: str) -> QuoteStyle:
+    if not fraction32 is None:
+        if fraction32 == '+':
+            return QuoteStyle.BOND
+
+        # Numbers of 1, 6, 8 are only present in short term futures
+        if fraction32 in ['1', '6', '8']:
+            return QuoteStyle.SHORT_NOTE_FUTURE
+
     if not delimiter_frac is None and delimiter_frac == '.':
         return QuoteStyle.DECIMAL
+
     if (not delimiter_frac is None and delimiter_frac == "'"):
+        # An additional quote delimiter is only present in ZT, ZF, ZN, TN.
         if (not delimiter32 is None and delimiter32 == "'"):
             return QuoteStyle.NOTE_FUTURE
         else:
             return QuoteStyle.BOND_FUTURE
 
     return QuoteStyle.BOND
+
 
 STYLE_PARSERS: Final = {
     QuoteStyle.BOND: parse_treasury_price,
@@ -149,7 +164,7 @@ class Quote:
             raise TypeError('quote must be a string')
 
         price = 0
-        regex = r"(?P<number>^\d+)(?P<delimiter_frac>[\.\-\'])?(?P<fraction>\d{2})?(?P<delimiter32>\'?)(?P<fraction32>\d+)?"
+        regex = r"(?P<number>^\d+)(?P<delimiter_frac>[\.\-\'])?(?P<fraction>\d{2})?(?P<delimiter32>\'?)(?P<fraction32>[\d+,\+])?"
         matches = re.finditer(regex, quote, re.MULTILINE)
 
         for matchnum, match in enumerate(matches, start=1):
@@ -158,7 +173,11 @@ class Quote:
             fraction32 = match.group('fraction32')
 
             if quotestyle == QuoteStyle.DETECT or quotestyle is None:
-                style = detect_quote_style(match.group('delimiter_frac'), match.group('delimiter32'))
+                style = detect_quote_style(
+                    fraction32, 
+                    match.group('delimiter_frac'), 
+                    match.group('delimiter32')
+                )
             else:
                 style = quotestyle
 
