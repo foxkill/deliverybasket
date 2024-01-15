@@ -7,6 +7,7 @@ import typer
 from typing import Annotated, Optional
 from dlv import __app_name__, __version__, Basket, Future
 from dlv.cache import Cache
+from dlv.quote import Quote, QuoteStyle
 
 def version(value: bool) -> None:
     if value:
@@ -14,6 +15,34 @@ def version(value: bool) -> None:
         raise typer.Exit(0)
 
 app = typer.Typer(help=__app_name__)
+
+@app.command()
+def conv(
+    in_: Annotated[
+        str, 
+        typer.Option(
+            '--in',
+            help='The input value to convert.'
+        )
+    ],
+    style: Annotated[
+        str, 
+        typer.Option(
+            help='The style of the input value.'
+        )]
+):
+    STYLES = {
+        "bond": QuoteStyle.BOND,
+        "note": QuoteStyle.NOTE_FUTURE,
+        "short-note": QuoteStyle.SHORT_NOTE_FUTURE,
+        "decimal": QuoteStyle.DECIMAL,
+        "detect": QuoteStyle.DETECT,
+    }
+
+    quotestyle = STYLES.get(style, QuoteStyle.DETECT)
+    q = Quote.parse(in_, quotestyle)
+    typer.echo(q.price)
+    typer.Exit(0)
 
 @app.command()
 def set(
@@ -25,7 +54,7 @@ def set(
             help='Name of the future the basket is deliverable to. Examples are: TUU2, FVH4 etc.')
         ],
     cusip: Annotated[str, typer.Option(help='Set the price of the treasury with the given cusip number.')],
-    price: Annotated[float, typer.Option(help='The price to set for the given asset.')],
+    price: Annotated[str, typer.Option(help='The price to set for the given asset.')],
 ):
     c = Cache()
     basket = None
@@ -44,7 +73,7 @@ def set(
             typer.echo(f'Treasury with the cusip of {cusip} was not found')
             typer.Exit(3)
         else:
-            treasury.price = price
+            treasury.price = Quote.parse(price, QuoteStyle.BOND).price
             c.put(basket)
             typer.echo('Price was successfully set.')
 

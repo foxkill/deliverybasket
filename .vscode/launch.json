@@ -38,7 +38,16 @@
             "program": "main.py",
             "console": "integratedTerminal",
             "justMyCode": false,
-            "args": ["print", "--future=tuu0", "--price=110.355468", "--repo-rate=0.172", "--trade=2020-06-22"]
+            "args": ["print", "--future=tuu0", "--price=110.355468", "--repo-rate=0.172", "--trade=2020-06-22", "--ldd=2020-10-05"]
+        },
+        {
+            "name": "dlv [conv]",
+            "type": "python",
+            "request": "launch",
+            "program": "main.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "args": ["conv", "--in=103-04+", "--style=bond"]
         },
         {
             "name": "current file",
