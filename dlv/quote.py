@@ -1,11 +1,11 @@
 #
 # dlv:quote
 #
-from dataclasses import dataclass
 import enum
-
 import re
+from dataclasses import dataclass
 from typing import Final, Optional
+
 
 class QuoteStyle(enum.IntFlag):
     DETECT = 0
@@ -58,7 +58,7 @@ def parse_short_term_note_future_price(number: str, fraction: str, fraction32: s
     return price
 
 def parse_note_future_price(number: str, fraction: str, fraction32: str) -> float:
-    """Parse the price of a note future, TN, ZN, ZF"""
+    """Parse the price of a note future, ZF, ZN, TN"""
     price = 0
     if number.isnumeric():
         price += int(number)
@@ -127,7 +127,8 @@ def detect_quote_style(fraction32: str, delimiter_frac: str, delimiter32: str) -
     if not fraction32 is None:
         if fraction32 == '+':
             return QuoteStyle.BOND
-
+        if fraction32 in ['2', '5', '7']:
+            return QuoteStyle.NOTE_FUTURE
         # Numbers of 1, 6, 8 are only present in short term futures
         if fraction32 in ['1', '6', '8']:
             return QuoteStyle.SHORT_NOTE_FUTURE
