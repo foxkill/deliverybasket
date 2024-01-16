@@ -4,17 +4,18 @@
 import asyncio
 import datetime
 import os
-from httpx import Response
-from typing import Dict, Iterable, Union
-from rateslib import BondFuture, FixedRateBond, dt
-import yaml
 from hashlib import md5
+from typing import Dict, Iterable, Union
+
+import yaml
+from httpx import Response
+from rateslib import BondFuture, FixedRateBond, dt
 from stdnum import cusip as cu
 
+from .future import NOTIONAL_COUPON, Future
 from .quote import Quote, QuoteStyle
 from .thttp import get
-from .future import Future, NOTIONAL_COUPON
-from .treasury import Treasury
+from .treasury import Treasury, TreasuryType
 
 # python 3.9
 TreasuryDict = Dict[str, Union[Treasury, None]]
@@ -66,7 +67,8 @@ class Basket():
                     effective=eff, 
                     termination=mat,
                     price=item['price'],
-                    fixed_rate=item['fixed_rate']
+                    fixed_rate=item['fixed_rate'],
+                    type=item.get('securityType', TreasuryType.BOND)
                 )
 
                 self._cusips[key] = treasury
@@ -117,7 +119,8 @@ class Basket():
                     effective=eff, 
                     termination=mat,
                     price=100,
-                    fixed_rate=rate
+                    fixed_rate=rate,
+                    type=item.get('securityType', TreasuryType.BOND)
                 )
 
                 self._cusips[item['cusip']] = treasury
