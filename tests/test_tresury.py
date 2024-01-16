@@ -37,13 +37,14 @@ def test_to_yaml(treasury, generate_cusips):
     cusip = generate_cusips[0]
     t = treasury
 
-    yaml = t.to_yaml(cusip)
+    yaml = t.to_yaml_ex(cusip)
 
     assert cusip in yaml
     assert '2020-01-01T00:00:00' in yaml
     assert '2025-01-01T00:00:00' in yaml
     assert '2.5' in yaml
     assert f'{103+((3/8)/32)}' in yaml
+    assert f'{TreasuryType.BOND.value}' in yaml
 
 def test_to_yaml_with_invalid_cusip(treasury, generate_cusips):
     cusip = 'xvii'

@@ -38,6 +38,7 @@ class Basket():
         self._future = Future.parse(value)
         
     def build_from_yaml(self, treasuryYaml: dict):
+        """Build the basket from a yaml file."""
         self._has_basket = False
         try:
             for key in treasuryYaml:
@@ -68,7 +69,7 @@ class Basket():
                     termination=mat,
                     price=item['price'],
                     fixed_rate=item['fixed_rate'],
-                    type=item.get('securityType', TreasuryType.BOND)
+                    type=TreasuryType.BOND if TreasuryType.BOND.value == item.get('type', TreasuryType.BOND.value) else TreasuryType.NOTE
                 )
 
                 self._cusips[key] = treasury
@@ -120,7 +121,7 @@ class Basket():
                     termination=mat,
                     price=100,
                     fixed_rate=rate,
-                    type=item.get('securityType', TreasuryType.BOND)
+                    type=TreasuryType.BOND if TreasuryType.BOND.value == item.get('securityType', TreasuryType.BOND.value) else TreasuryType.NOTE
                 )
 
                 self._cusips[item['cusip']] = treasury
@@ -178,8 +179,22 @@ class Basket():
         self._cusips = cusips
     
     def get_calculation_mode(self) -> str:
-        # TODO: get type of treasuries in the list and determine calculation mode.
-        return 'ust_short'
+        map = { 
+            TreasuryType.BOND: 0,
+            TreasuryType.NOTE: 0
+        }
+        for treasury in self._cusips.values():
+            if treasury is None:
+                continue
+
+            type = treasury.type
+
+            if type == TreasuryType.BOND:
+                map[TreasuryType.BOND] += 1
+            if type == TreasuryType.NOTE:
+                map[TreasuryType.NOTE] += 1
+
+        return 'ust_long' if map.get(TreasuryType.BOND, 0) > map.get(TreasuryType.NOTE, 0) else 'ust_short'
     
     def parse_date(self, settlement: str) -> datetime.date:
         return datetime.datetime.now() \
@@ -196,9 +211,12 @@ class Basket():
 
         date = self.parse_date(settlement=settlement)
         basket = [t.treasury for t in self._cusips.values()] # type: ignore
+        calc_mode = self.get_calculation_mode()
 
-        print(f'LDD: {self.future.get_last_delivery_day()}')
-        print(qprice.price)
+        print(f'Last delivery day: {self.future.get_last_delivery_day()}')
+        print(f'Future price: {qprice.price}')
+        print(f'Calculation mode: {calc_mode}\n')
+
         # TODO: if we have notes, then we must set calc_mode to ust_short.
         future = BondFuture(
             coupon=NOTIONAL_COUPON,
@@ -206,7 +224,7 @@ class Basket():
             basket=basket, # type: ignore
             calendar="nyc",
             currency="usd",
-            calc_mode=self.get_calculation_mode()
+            calc_mode=calc_mode,
         )
 
         prices = [t.price if not t is None else 0 for t in self._cusips.values()]
@@ -217,7 +235,6 @@ class Basket():
             settlement=dt(date.year, date.month, date.day),
             convention='Act360',
         )
-
 
         df['Gross Basis'] *= 32
         df['Net Basis'] *= 32
