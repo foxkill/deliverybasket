@@ -23,6 +23,6 @@ Calculation mode: ust_short
 2  1.875% 30-09-2022  103.808594  0.193932    0.9233    61.356462     -4.669863        0.172  46.195918  9128282W9
 ```
 
-which should respond to same result as the dlv-function of the bloomberg terminal :)
+which should correspond to the result as the output to the dlv-function of the bloomberg terminal :)
 
 
